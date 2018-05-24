@@ -1,0 +1,63 @@
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    padding: 0px;
+    overflow: hidden;
+}
+
+.button {
+    background-color: #008c9e;
+    border: none;
+    color: black;
+    width: 145px;
+    height: 38px;
+    margin: 4px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: #05a6bb;
+}
+
+#main {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    position: relative;
+}
+
+#toolBar {
+    position: relative;
+    height: 50px;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    background-color: #2d2d29
+}
+
+#container {
+    position: relative;
+    height: calc(100% - 50px);
+    width: 100%;
+}
+
+#graphCanvas {
+    box-sizing: border-box;
+}
+
+#glCanvas {
+    box-sizing: border-box;
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    width: 45%;
+    height: 45%;
+    margin: 0px;
+    z-index: 1000;
+}
