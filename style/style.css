@@ -61,3 +61,24 @@ html, body {
     margin: 0px;
     z-index: 1000;
 }
+
+#textureContainer {
+    box-sizing: border-box;
+    position: absolute;
+    right: 0px;
+    top: 45%;
+    z-index: 1000;
+    height: 55%;
+    width: 15%;
+    display: block;
+}
+
+#heightmapTex {
+    width: 100%;
+    height: 50%;
+}
+
+#normalsTex {
+    width: 100%;
+    height: 50%;
+}

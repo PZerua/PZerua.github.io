@@ -4,6 +4,8 @@ class Texture {
 
         this.width = width;
         this.height = height;
+        this.format = format;
+        this.type = type;
 
         this.textureId = gl.createTexture();
         this.bind();
@@ -19,7 +21,7 @@ class Texture {
 
     updateTexture(data) {
         gl.bindTexture(gl.TEXTURE_2D, this.textureId);
-        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, this.width, this.height, gl.R32F, gl.FLOAT, data);
+        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, this.width, this.height, this.format, this.type, data);
     }
 
     bind() {

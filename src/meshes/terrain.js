@@ -39,6 +39,7 @@ function Terrain(scale) {
 
         self.heightmapTexture = heightmapOBJ.heightmapTexture;
         self.normalsTexture = heightmapOBJ.normalsTexture;
+        self.colorTexture = heightmapOBJ.colorTexture;
         self.size = heightmapOBJ.size;
         self.heightmapHeightScale = heightmapOBJ.heightScale;
 
@@ -60,10 +61,6 @@ function Terrain(scale) {
         // TODO: Review this
         self.center = new vec3(self.size / 2.0, 0, self.size / 2.0);
         self.radious = Math.sqrt((self.center.x) * (self.center.x) + (self.center.z) * (self.center.z));
-
-        if (self.firstCreation) {
-            Editor.centerCamera()
-        }
 
         // -- Barypoints --
         var currentBaryPoint = new vec3(1, 0, 0);
@@ -158,7 +155,8 @@ function Terrain(scale) {
         self.isReady = true;
     }
 
-    this.shader = new Shader("terrain", this.setupTerrain);
+    this.shader = Shader.getShader("terrain");
+    this.setupTerrain();
 
     this.render = function(camera) {
         if (this.isReady) {
@@ -176,6 +174,9 @@ function Terrain(scale) {
             this.shader.setInt("u_normalsTexture", 1)
             gl.activeTexture(gl.TEXTURE1);
             this.normalsTexture.bind();
+            this.shader.setInt("u_colorTexture", 2)
+            gl.activeTexture(gl.TEXTURE2);
+            this.colorTexture.bind();
 
             // Used for lightning
             this.shader.setVec3("u_eye", camera.eye);

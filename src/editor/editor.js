@@ -33,31 +33,31 @@ var Editor = {
 		this.sizeNode.title = "Size";
 		this.sizeNode.pos = [200,500];
 		this.graph.add(this.sizeNode);
-		this.sizeNode.setValue(256);
+		this.sizeNode.setValue(1024.0);
 
 		this.amplitudeNode = LiteGraph.createNode("basic/const");
 		this.amplitudeNode.title = "Amplitude";
 		this.amplitudeNode.pos = [200,550];
 		this.graph.add(this.amplitudeNode);
-		this.amplitudeNode.setValue(1.5);
+		this.amplitudeNode.setValue(1.0);
 
 		this.frequencyNode = LiteGraph.createNode("basic/const");
 		this.frequencyNode.title = "Frequency";
 		this.frequencyNode.pos = [200,600];
 		this.graph.add(this.frequencyNode);
-		this.frequencyNode.setValue(1);
+		this.frequencyNode.setValue(2.0);
 
 		this.octavesNode = LiteGraph.createNode("basic/const");
 		this.octavesNode.title = "Octaves";
 		this.octavesNode.pos = [200,650];
 		this.graph.add(this.octavesNode);
-		this.octavesNode.setValue(6);
+		this.octavesNode.setValue(6.0);
 
 		this.heightScaleNode = LiteGraph.createNode("basic/const");
 		this.heightScaleNode.title = "Height Scale";
 		this.heightScaleNode.pos = [200,700];
 		this.graph.add(this.heightScaleNode);
-		this.heightScaleNode.setValue(200);
+		this.heightScaleNode.setValue(200.0);
 
 		this.perlinNode = LiteGraph.createNode("heightmap/perlinNoise");
 		this.perlinNode.pos = [500,500];
@@ -77,15 +77,10 @@ var Editor = {
 
 		this.perlinNode.connect(0, this.outputNode, 0);
 
-		// Run first step
-		this.graph.runStep()
-
 		// Setup renderer and camera
 		this.renderer = new Renderer(this.glCanvas);
 		this.camera.setPerspective(45.0, this.glCanvas.width / this.glCanvas.height, 0.1, 5000.0);
 	    this.camera.setViewport(0, 0, this.glCanvas.width, this.glCanvas.height);
-
-		this.centerCamera();
 
 		var self = this;
 		var wireframeButton = document.getElementById("wireframeButton")
@@ -113,7 +108,7 @@ var Editor = {
 		mainLoop();
 	},
 	centerCamera: function() {
-		this.camera.eye = new vec3(0, this.renderer.terrain.radious * 1.5, this.renderer.terrain.radious * 3.0);
+		this.camera.eye = new vec3(0, this.renderer.terrain.radious * 1.5, this.renderer.terrain.radious * 2.5);
 
 		var dir = vec3.vec3Sub(new vec3(0,0,0), this.camera.eye).normalize();
 
@@ -134,7 +129,7 @@ function mainLoop() {
 	Editor.prevMousePos.x = Editor.mousePos.x;
 	Editor.prevMousePos.y = Editor.mousePos.y;
 
-	var vel = 4.0;
+	var vel = 5.0;
 
 	if (Editor.currentKeys["w"] === true)
 		Editor.camera.eye.add(vec3.vec3Normalize(Editor.camera.front).multiplyScalar(vel));

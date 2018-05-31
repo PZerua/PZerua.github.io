@@ -8,9 +8,11 @@ function PerlinNoiseNode() {
     this.addInput("Height Scale", "number");
     this.addOutput("Heightmap");
 
+    // The object to be exported
     this.heighmapOBJ = {
         heightmapTexture: undefined,
         normalsTexture: undefined,
+        colorTexture: undefined,
         size: 0,
         heightScale: 0
     }
@@ -59,9 +61,16 @@ PerlinNoiseNode.prototype.onExecute = function() {
 
     // --- Create heightmap and save it in the provided texture ---
     // Create texture to be filled by the framebuffer
-    this.heighmapOBJ.heightmapTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.R16F, gl.RED, gl.FLOAT, null);
+    this.heighmapOBJ.heightmapTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null);
     // Create framebuffer providing the texture and a custom shader
     this.fboHeightmap = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.heighmapOBJ.heightmapTexture.textureId, "perlinNoise", setHeightmapUniformsCallback);
+
+    this.fboHeightmap.render();
+
+    // Display texture in editor
+    var img = this.fboHeightmap.toImage();
+    var htmlImg = document.getElementById("heightmapTex");
+    htmlImg.src = img.src;
 
     this.setOutputData(0, this.heighmapOBJ);
 }

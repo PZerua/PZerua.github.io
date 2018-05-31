@@ -69,7 +69,12 @@ function Shader(shaderName, shaderCallback) {
 
         console.log("Shader \"" + self.shaderName + "\" compiled")
 
-        shaderCallback();
+        // Save shader instance
+        Shader.shadersMap[self.shaderName] = self;
+
+        if (shaderCallback !== undefined) {
+            shaderCallback();
+        }
     }
 
     this.enable = function() {
@@ -100,3 +105,16 @@ function Shader(shaderName, shaderCallback) {
         gl.uniform1fv(gl.getUniformLocation(this.programId, name), count, values);
     }
 }
+
+// Prevents compiling a single shader multiple times. The function returns shader instances
+Shader.getShader = function(shaderName, shaderCallback) {
+    if (Shader.shadersMap[shaderName] !== undefined) {
+        return Shader.shadersMap[shaderName];
+    }
+    else {
+        return new Shader(shaderName, shaderCallback);
+    }
+}
+
+// Map containing map instances
+Shader.shadersMap = {};

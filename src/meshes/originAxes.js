@@ -95,7 +95,8 @@ function OriginAxes() {
         self.isReady = true;
     }
 
-    this.shader = new Shader("axes", this.setupAxes);
+    this.shader = Shader.getShader("axes");
+    this.setupAxes();
 
     this.render = function(camera) {
         if (this.isReady) {

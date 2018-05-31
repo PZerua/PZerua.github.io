@@ -8,14 +8,9 @@ function Renderer(canvas) {
 		|| document.documentElement.clientHeight
 		|| document.body.clientHeight;
 
-	// this.heightmapTex = new Texture(256, 256, gl.R16F, gl.RED, gl.FLOAT, null);
-	// this.framebufer = new FrameBuffer(256, 256, this.heightmapTex, "perlinNoise");
 
-	this.axes = new OriginAxes();
-	// Size more than 256 exceeds the max index value: 2^16
-    this.terrain = new Terrain(4);
-
-    gl.clearColor(0.176, 0.176, 0.160, 1.0);
+	// Setup webgl
+	gl.clearColor(0.176, 0.176, 0.160, 1.0);
 	gl.enable(gl.DEPTH_TEST);
 	gl.depthFunc(gl.LEQUAL);
 
@@ -25,9 +20,45 @@ function Renderer(canvas) {
 	gl.enable(gl.SAMPLE_ALPHA_TO_COVERAGE);
 	gl.enable(gl.BLEND);
 	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+	this.shadersReady = false;
+
+	this.initRenderer = function() {
+		// Run first step
+		Editor.graph.runStep()
+
+		this.axes = new OriginAxes();
+		// Size more than 256 exceeds the max index value: 2^16
+		this.terrain = new Terrain(2);
+
+		Editor.centerCamera();
+		self.shadersReady = true;
+	}
+
+	// Precompile shaders
+	var numCompiled = 0;
+	var self = this;
+	function precompileShadersCallback() {
+		numCompiled++;
+
+		if (numCompiled === 6) {
+			self.initRenderer();
+		}
+	}
+
+	Shader.getShader("terrain", precompileShadersCallback)
+	Shader.getShader("axes", precompileShadersCallback)
+	Shader.getShader("perlinNoise", precompileShadersCallback)
+	Shader.getShader("valueNoise", precompileShadersCallback)
+	Shader.getShader("calcNormals", precompileShadersCallback)
+	Shader.getShader("calcColor", precompileShadersCallback)
 }
 
 Renderer.prototype.render = function(camera) {
+
+	if (!this.shadersReady) {
+		return;
+	}
 
 	gl.viewport(0, 0, Editor.glCanvas.width, Editor.glCanvas.height);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);

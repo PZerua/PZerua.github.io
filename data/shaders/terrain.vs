@@ -21,6 +21,7 @@ void main(void)
 {
 	float height = texture(u_heightmap, aUvs).r;
 
+	// Map to range -1 - 1
 	height = height * 2.0 - 1.0;
 
 	normal = aNormal;

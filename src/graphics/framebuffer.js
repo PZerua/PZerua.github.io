@@ -52,12 +52,7 @@ class FrameBuffer {
 
         this.vao.unbind();
 
-        var self = this;
-        function callback() {
-            self.render();
-        }
-
-        this.shader = new Shader(shaderName, callback);
+        this.shader = Shader.getShader(shaderName);
     }
 
     bind() {
@@ -66,6 +61,32 @@ class FrameBuffer {
 
     unbind() {
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
+
+    toImage() {
+
+        this.bind();
+
+        // Read the contents of the framebuffer
+        var pixels = new Uint8Array(this.width * this.height * 4);
+        gl.readPixels(0, 0, this.width, this.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+
+        this.unbind();
+
+        // Create a 2D canvas to store the result
+        var canvas = document.createElement('canvas');
+        canvas.width = this.width;
+        canvas.height = this.height;
+        var context = canvas.getContext('2d');
+
+        // Copy the pixels to a 2D canvas
+        var imageData = context.createImageData(this.width, this.height);
+        imageData.data.set(pixels);
+        context.putImageData(imageData, 0, 0);
+
+        var img = new Image();
+        img.src = canvas.toDataURL();
+        return img;
     }
 
     render() {

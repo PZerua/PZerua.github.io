@@ -13,6 +13,7 @@ uniform vec3 u_eye;
 
 uniform sampler2D u_heightmapTexture;
 uniform sampler2D u_normalsTexture;
+uniform sampler2D u_colorTexture;
 
 uniform bool u_showWireframe;
 
@@ -25,9 +26,9 @@ float edgeFactor()
 
 void main (void)
 {
-    vec3 light = vec3(100, 400, 100);
+    vec3 light = vec3(512, 512, 512);
 
-    vec4 heightmapTex = texture(u_heightmapTexture, oUvs);
+    vec4 heightmapTex = texture(u_colorTexture, oUvs);
     vec4 normalsTex = texture(u_normalsTexture, oUvs);
 
     vec4 diffuse;
@@ -36,10 +37,11 @@ void main (void)
     vec3 R = normalize(reflect(-L, N));
     vec3 V = normalize(u_eye - oVertex);
 
-    diffuse.rgb = clamp( vec3(0, 0.549, 0.619) * max(dot(N,L), 0.0), 0.0, 1.0 );
+    diffuse.rgb = clamp( vec3(0.8, 0.8, 0.8) * max(dot(N,L), 0.0), 0.0, 1.0 );
     diffuse.a = 1.0;
 
-    diffuse.rgb = heightmapTex.rrr + diffuse.rgb;
+    diffuse.rgb = 0.2 * vec3(0, 0.549, 0.619) + heightmapTex.rgb * diffuse.rgb;
+    //diffuse.rgb = heightmapTex.rgb * diffuse.rgb;
 
     if (u_showWireframe) {
         fragColor = mix(vec4(0, 0.249, 0.319, 1.0), diffuse, edgeFactor());
@@ -47,6 +49,7 @@ void main (void)
         fragColor = diffuse;
     }
 
+    //fragColor = vec4(heightmapTex.rrr, 1.0);
     //fragColor = normalsTex;
 
 }
