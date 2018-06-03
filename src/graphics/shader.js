@@ -107,14 +107,28 @@ function Shader(shaderName, shaderCallback) {
 }
 
 // Prevents compiling a single shader multiple times. The function returns shader instances
-Shader.getShader = function(shaderName, shaderCallback) {
+Shader.getShader = function(shaderName) {
     if (Shader.shadersMap[shaderName] !== undefined) {
         return Shader.shadersMap[shaderName];
     }
     else {
-        return new Shader(shaderName, shaderCallback);
+        console.error("The shader " +  shaderName + " was not precompiled");
+    }
+}
+
+// Prevents compiling a single shader multiple times. The function returns shader instances
+Shader.registerShader = function(shaderName) {
+    Shader.precompileRegistry.push(shaderName);
+}
+
+Shader.precompileShaders = function(shaderCallback) {
+    for (var i = 0; i < Shader.precompileRegistry.length; i++) {
+        var shaderName = Shader.precompileRegistry[i];
+        Shader.shadersMap[shaderName] = new Shader(shaderName, shaderCallback);
     }
 }
 
 // Map containing map instances
 Shader.shadersMap = {};
+// Map containing map instances
+Shader.precompileRegistry = [];

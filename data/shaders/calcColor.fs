@@ -25,15 +25,21 @@ void main (void)
 
 	vec3 color;
 
-	if (f < 0.20) {
-		color = seaColor;
+    if (f < 0.20) {
+        color = mix(vec3(0.0, 0.0, 0.0), seaColor, map(f, 0.0, 0.20, 0.0, 1.0));
+    }
+	else if (f >= 0.20 && f < 0.30) {
+		color = mix(shoreColor, fieldColor, map(f, 0.20, 0.30, 0.0, 1.0));
 	}
-	else if (f >= 0.20 && f < 0.50) {
-		color = mix(shoreColor, fieldColor, map(f, 0.20, 0.50, 0.0, 1.0));
+    else if (f >= 0.30  && f <= 0.5) {
+        color = fieldColor;
+    }
+	else if (f >= 0.50 && f <= 0.7) {
+		color = mix(fieldColor, snowColor, map(f, 0.50, 0.7, 0.0, 1.0));
 	}
-	else if (f >= 0.50 && f <= 1.0) {
-		color = mix(fieldColor, snowColor, map(f, 0.50, 1.0, 0.0, 1.0));
-	}
+    else if (f >= 0.70) {
+        color = snowColor;
+    }
 
 	fragColor = vec4(color, 1.0);
 }

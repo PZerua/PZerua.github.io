@@ -5,7 +5,6 @@ precision highp float;
 in vec3 oBarycentric;
 
 out vec4 fragColor;
-in vec3 normal;
 in vec3 oVertex;
 in vec2 oUvs;
 
@@ -31,14 +30,13 @@ void main (void)
     vec4 heightmapTex = texture(u_colorTexture, oUvs);
     vec4 normalsTex = texture(u_normalsTexture, oUvs);
 
-    vec4 diffuse;
+    vec4 diffuse = vec4(0.0, 0.0, 0.0, 1.0);
     vec3 N = normalsTex.rgb;
     vec3 L = normalize(light - oVertex);
     vec3 R = normalize(reflect(-L, N));
     vec3 V = normalize(u_eye - oVertex);
 
     diffuse.rgb = clamp( vec3(0.8, 0.8, 0.8) * max(dot(N,L), 0.0), 0.0, 1.0 );
-    diffuse.a = 1.0;
 
     diffuse.rgb = 0.2 * vec3(0, 0.549, 0.619) + heightmapTex.rgb * diffuse.rgb;
     //diffuse.rgb = heightmapTex.rgb * diffuse.rgb;

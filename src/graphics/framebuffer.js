@@ -10,11 +10,12 @@ class FrameBuffer {
 
         this.height = height;
         this.width = width;
+        this.texture = texture;
 
         this.fbId = gl.createFramebuffer();
         this.bind();
         // Assign texture to framebuffer
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture.textureId, 0);
         this.unbind();
 
         // Quad vertices
@@ -68,8 +69,10 @@ class FrameBuffer {
         this.bind();
 
         // Read the contents of the framebuffer
-        var pixels = new Uint8Array(this.width * this.height * 4);
-        gl.readPixels(0, 0, this.width, this.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        var pixels = new Uint8Array(this.width * this.height * 4 );
+        var a = gl.getParameter(gl.IMPLEMENTATION_COLOR_READ_TYPE);
+        var b = gl.getParameter(gl.IMPLEMENTATION_COLOR_READ_FORMAT);
+        gl.readPixels(0, 0, this.width, this.height, this.texture.internalFormat, this.texture.type, pixels);
 
         this.unbind();
 

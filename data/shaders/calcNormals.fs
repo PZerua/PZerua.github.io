@@ -21,9 +21,7 @@ void main (void)
     float hU = u_heightScale * texture(u_heightmapTexture, oUvs - dV).r;
     float hD = u_heightScale * texture(u_heightmapTexture, oUvs + dV).r;
 
-    vec3 normal = normalize(vec3(hL - hR, 2.0, hD - hU));
-
-    normal.z = -normal.z;
+    vec3 normal = normalize(vec3(hL - hR, 2.0, hU - hD));
 
     fragColor = vec4(normal, 1.0);
 }

@@ -45,13 +45,13 @@ var Editor = {
 		this.frequencyNode.title = "Frequency";
 		this.frequencyNode.pos = [200,600];
 		this.graph.add(this.frequencyNode);
-		this.frequencyNode.setValue(2.0);
+		this.frequencyNode.setValue(1.5);
 
 		this.octavesNode = LiteGraph.createNode("basic/const");
 		this.octavesNode.title = "Octaves";
 		this.octavesNode.pos = [200,650];
 		this.graph.add(this.octavesNode);
-		this.octavesNode.setValue(6.0);
+		this.octavesNode.setValue(8.0);
 
 		this.heightScaleNode = LiteGraph.createNode("basic/const");
 		this.heightScaleNode.title = "Height Scale";
@@ -59,9 +59,21 @@ var Editor = {
 		this.graph.add(this.heightScaleNode);
 		this.heightScaleNode.setValue(200.0);
 
-		this.perlinNode = LiteGraph.createNode("heightmap/perlinNoise");
+		this.exponentNode = LiteGraph.createNode("basic/const");
+		this.exponentNode.title = "Exponent";
+		this.exponentNode.pos = [550, 650];
+		this.graph.add(this.exponentNode);
+		this.exponentNode.setValue(3.0);
+
+		this.powFilterNode = LiteGraph.createNode("heightmap/powFilter");
+		this.powFilterNode.pos = [800, 600];
+		this.graph.add(this.powFilterNode);
+
+		this.perlinNode = LiteGraph.createNode("heightmap/cellularNoise");
 		this.perlinNode.pos = [500,500];
 		this.graph.add(this.perlinNode);
+
+		this.exponentNode.connect(0, this.powFilterNode, 1);
 
 		var idx = 0;
 		// Sample nodes in order
@@ -72,14 +84,15 @@ var Editor = {
 		this.heightScaleNode.connect(0, this.perlinNode, idx++ );
 
 		this.outputNode = LiteGraph.createNode("heightmap/heightmapOutput");
-		this.outputNode.pos = [750,500];
+		this.outputNode.pos = [1000,500];
 		this.graph.add(this.outputNode);
 
-		this.perlinNode.connect(0, this.outputNode, 0);
+		this.perlinNode.connect(0, this.powFilterNode, 0);
+		this.powFilterNode.connect(0, this.outputNode, 0);
 
 		// Setup renderer and camera
 		this.renderer = new Renderer(this.glCanvas);
-		this.camera.setPerspective(45.0, this.glCanvas.width / this.glCanvas.height, 0.1, 5000.0);
+		this.camera.setPerspective(45.0, this.glCanvas.width / this.glCanvas.height, 0.1, 20000.0);
 	    this.camera.setViewport(0, 0, this.glCanvas.width, this.glCanvas.height);
 
 		var self = this;
@@ -129,7 +142,11 @@ function mainLoop() {
 	Editor.prevMousePos.x = Editor.mousePos.x;
 	Editor.prevMousePos.y = Editor.mousePos.y;
 
-	var vel = 5.0;
+	if (Editor.currentKeys["Shift"] === true) {
+		var vel = 10.0;
+	} else {
+		var vel = 5.0;
+	}
 
 	if (Editor.currentKeys["w"] === true)
 		Editor.camera.eye.add(vec3.vec3Normalize(Editor.camera.front).multiplyScalar(vel));
@@ -157,7 +174,7 @@ window.addEventListener("resize", function(event) {
 	Editor.glCanvas.width = window.innerWidth
 	Editor.glCanvas.height = window.innerHeight
 
-	Editor.camera.setPerspective(45.0, Editor.glCanvas.width / Editor.glCanvas.height, 0.1, 5000.0);
+	Editor.camera.setPerspective(45.0, Editor.glCanvas.width / Editor.glCanvas.height, 0.1, 20000.0);
 	Editor.camera.setViewport(0, 0, Editor.glCanvas.width, Editor.glCanvas.height);
 
 });

@@ -1,5 +1,5 @@
 //node constructor class
-function ValueNoiseNode() {
+function CellularNoiseNode() {
 
     this.addInput("Size", "number");
     this.addInput("Amplitude", "number");
@@ -11,18 +11,19 @@ function ValueNoiseNode() {
     this.heighmapOBJ = {
         heightmapTexture: undefined,
         normalsTexture: undefined,
+        colorTexture: undefined,
         size: 0,
         heightScale: 0
     }
 }
 
 //name to show
-ValueNoiseNode.title = "Value Noise";
-ValueNoiseNode.position = [10, 50];
-ValueNoiseNode.size = [300, 50];
+CellularNoiseNode.title = "Cellular Noise";
+CellularNoiseNode.position = [10, 50];
+CellularNoiseNode.size = [300, 50];
 
 //function to call when the node is executed
-ValueNoiseNode.prototype.onExecute = function() {
+CellularNoiseNode.prototype.onExecute = function() {
 
     // Receive size
     this.heighmapOBJ.size = this.getInputData(0);
@@ -59,12 +60,19 @@ ValueNoiseNode.prototype.onExecute = function() {
 
     // --- Create heightmap and save it in the provided texture ---
     // Create texture to be filled by the framebuffer
-    this.heighmapOBJ.heightmapTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.R16F, gl.RED, gl.FLOAT, null);
+    this.heighmapOBJ.heightmapTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null);
     // Create framebuffer providing the texture and a custom shader
-    this.fboHeightmap = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.heighmapOBJ.heightmapTexture.textureId, "valueNoise", setHeightmapUniformsCallback);
+    this.fboHeightmap = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.heighmapOBJ.heightmapTexture, "cellularNoise", setHeightmapUniformsCallback);
+
+    this.fboHeightmap.render();
+
+    // Display texture in editor
+    var img = this.fboHeightmap.toImage();
+    var htmlImg = document.getElementById("heightmapTex");
+    htmlImg.src = img.src;
 
     this.setOutputData(0, this.heighmapOBJ);
 }
 
 //register in the system
-LiteGraph.registerNodeType("heightmap/valueNoise", ValueNoiseNode);
+LiteGraph.registerNodeType("heightmap/cellularNoise", CellularNoiseNode);

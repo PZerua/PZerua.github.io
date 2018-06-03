@@ -41,17 +41,21 @@ function Renderer(canvas) {
 	function precompileShadersCallback() {
 		numCompiled++;
 
-		if (numCompiled === 6) {
+		if (numCompiled === Shader.precompileRegistry.length) {
 			self.initRenderer();
 		}
 	}
 
-	Shader.getShader("terrain", precompileShadersCallback)
-	Shader.getShader("axes", precompileShadersCallback)
-	Shader.getShader("perlinNoise", precompileShadersCallback)
-	Shader.getShader("valueNoise", precompileShadersCallback)
-	Shader.getShader("calcNormals", precompileShadersCallback)
-	Shader.getShader("calcColor", precompileShadersCallback)
+	Shader.registerShader("terrain");
+	Shader.registerShader("axes");
+	Shader.registerShader("perlinNoise");
+	Shader.registerShader("valueNoise");
+	Shader.registerShader("cellularNoise");
+	Shader.registerShader("calcNormals");
+	Shader.registerShader("calcColor");
+	Shader.registerShader("powFilter");
+	Shader.precompileShaders(precompileShadersCallback);
+
 }
 
 Renderer.prototype.render = function(camera) {

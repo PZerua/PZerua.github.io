@@ -4,6 +4,7 @@ class Texture {
 
         this.width = width;
         this.height = height;
+        this.internalFormat = internalFormat;
         this.format = format;
         this.type = type;
 

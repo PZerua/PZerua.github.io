@@ -61,9 +61,9 @@ PerlinNoiseNode.prototype.onExecute = function() {
 
     // --- Create heightmap and save it in the provided texture ---
     // Create texture to be filled by the framebuffer
-    this.heighmapOBJ.heightmapTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    this.heighmapOBJ.heightmapTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.FLOAT, null);
     // Create framebuffer providing the texture and a custom shader
-    this.fboHeightmap = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.heighmapOBJ.heightmapTexture.textureId, "perlinNoise", setHeightmapUniformsCallback);
+    this.fboHeightmap = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.heighmapOBJ.heightmapTexture, "perlinNoise", setHeightmapUniformsCallback);
 
     this.fboHeightmap.render();
 

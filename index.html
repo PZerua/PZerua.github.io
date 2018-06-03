@@ -33,6 +33,8 @@
         console.error("There is no support for WebGL2");
     }
     else {
+        gl.getExtension('OES_texture_float');
+        gl.getExtension('OES_texture_float_linear');
         gl.getExtension('EXT_color_buffer_float')
         console.log("WebGL2 context loaded");
     }
@@ -58,8 +60,10 @@
 <script src="src/external/stats.min.js"></script>
 
 <!--Editor-->
-<script src="src/litegraph/PerlinNoiseNode.js"></script>
-<script src="src/litegraph/ValueNoiseNode.js"></script>
+<script src="src/litegraph/Generation Nodes/PerlinNoiseNode.js"></script>
+<script src="src/litegraph/Generation Nodes/ValueNoiseNode.js"></script>
+<script src="src/litegraph/Generation Nodes/CellularNoiseNode.js"></script>
+<script src="src/litegraph/Filter Nodes/PowFilterNode.js"></script>
 <script src="src/litegraph/OutputNode.js"></script>
 <script src="src/meshes/terrain.js"></script>
 <script src="src/meshes/originAxes.js"></script>

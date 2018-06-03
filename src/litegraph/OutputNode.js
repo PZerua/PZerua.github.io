@@ -14,11 +14,13 @@ OutputNode.size = [300, 50];
 //function to call when the node is executed
 OutputNode.prototype.onExecute = function() {
 
-    // Receive size
-    this.heighmapOBJ = this.getInputData(0);
-    if (this.heighmapOBJ === undefined)
-        return;
-
+    // Receive heightmap Obj and copy its contents (I don't want to modify it being a reference, bad things can happen)
+    var heightmapOBJ = this.getInputData(0);
+    if (heightmapOBJ === undefined) {
+        return
+    } else {
+        this.heighmapOBJ = Object.assign({}, this.getInputData(0));
+    }
     var self = this;
 
     var setNormalsUniformsCallback = function() {
@@ -43,7 +45,7 @@ OutputNode.prototype.onExecute = function() {
     // Create texture to be filled by the framebuffer
     this.heighmapOBJ.normalsTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null);
     // Create framebuffer providing the texture and a custom shader
-    this.fboNormals = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.heighmapOBJ.normalsTexture.textureId, "calcNormals", setNormalsUniformsCallback);
+    this.fboNormals = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.heighmapOBJ.normalsTexture, "calcNormals", setNormalsUniformsCallback);
 
     this.fboNormals.render();
 
@@ -51,7 +53,7 @@ OutputNode.prototype.onExecute = function() {
     // Create texture to be filled by the framebuffer
     this.heighmapOBJ.colorTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null);
     // Create framebuffer providing the texture and a custom shader
-    this.fboColor = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.heighmapOBJ.colorTexture.textureId, "calcColor", setColorUniformsCallback);
+    this.fboColor = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.heighmapOBJ.colorTexture, "calcColor", setColorUniformsCallback);
 
     this.fboColor.render();
 
