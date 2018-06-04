@@ -71,6 +71,11 @@ CellularNoiseNode.prototype.onExecute = function() {
     var htmlImg = document.getElementById("heightmapTex");
     htmlImg.src = img.src;
 
+    // var link = document.createElement('a');
+    // link.download = "test.png";
+    // link.href = img.src.replace("image/png", "image/octet-stream");
+    // link.click();
+
     this.setOutputData(0, this.heighmapOBJ);
 }
 

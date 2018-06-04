@@ -46,8 +46,6 @@ float noise(vec2 st) {
 void main() {
     vec2 uv = oUvs;
 
-    uv += 1.0;
-
     float f = 0.0;
     float amplitude = 0.65 * u_amplitude;
 

@@ -1,11 +1,14 @@
-function Shader(shaderName, shaderCallback) {
+function Shader(vertexName, fragmentName, shaderCallback) {
 
     this.programId;
     this.isLoaded = false;
-    this.shaderName = shaderName;
+    this.vertexName = vertexName;
+    this.fragmentName = fragmentName;
+    this.isVertexAdded = Shader.vertexShaders[vertexName] !== undefined
 
     var numCompleted = 0;
     var result = [];
+    var numToCompile = this.isVertexAdded ? 1 : 2
 
     // Callback that calls compileShaders when both files are loaded
     function loadedCallback(text, index) {
@@ -13,39 +16,48 @@ function Shader(shaderName, shaderCallback) {
         numCompleted++;
 
         // When both sources are loaded, compile them
-        if (numCompleted == 2)
+        if (numCompleted == numToCompile)
             compileShaders(result);
     }
 
-    loadFile("data/shaders/" + shaderName + ".vs", loadedCallback, 0);
-    loadFile("data/shaders/" + shaderName + ".fs", loadedCallback, 1);
+    // Only read vertex shader if it was not already loaded
+    if (!this.isVertexAdded) {
+        Shader.vertexShaders[vertexName] = {name: vertexName, id : 0};
+        loadFile("data/shaders/" + vertexName + ".vs", loadedCallback, 0);
+    }
+
+    loadFile("data/shaders/" + fragmentName + ".fs", loadedCallback, 1);
 
     var self = this;
 
     function compileShaders(shaderTexts)
     {
-        var vertex = gl.createShader(gl.VERTEX_SHADER);
-        var fragment = gl.createShader(gl.FRAGMENT_SHADER);
+        if (!self.isVertexAdded) {
+            // Compile vertex source
+            var vertex = gl.createShader(gl.VERTEX_SHADER);
+            gl.shaderSource(vertex, shaderTexts[0]);
+            gl.compileShader(vertex);
+            // Print compile errors for vertex compilation
+            if (!gl.getShaderParameter(vertex, gl.COMPILE_STATUS))
+            {
+                var log = gl.getShaderInfoLog(vertex);
+                console.error("Error compiling vertex shader from \"" + self.vertexName + "\"\n" + log);
+            }
 
-        // Compile vertex source
-        gl.shaderSource(vertex, shaderTexts[0]);
-        gl.compileShader(vertex);
+            Shader.vertexShaders[self.vertexName].id = vertex;
+        } else {
+            var vertex = Shader.vertexShaders[self.vertexName].id;
+        }
 
         // Compile fragment source
+        var fragment = gl.createShader(gl.FRAGMENT_SHADER);
         gl.shaderSource(fragment, shaderTexts[1]);
         gl.compileShader(fragment);
-
-        // Print compile errors for vertex compilation
-        if (!gl.getShaderParameter(vertex, gl.COMPILE_STATUS))
-        {
-            var log = gl.getShaderInfoLog(vertex);
-            console.error("Error compiling vertex shader from \"" + self.shaderName + "\"\n" + log);
-        }
         // Print compile errors for fragment compilation
         if (!gl.getShaderParameter(fragment, gl.COMPILE_STATUS))
         {
             var log = gl.getShaderInfoLog(fragment);
-            console.error("Error compiling fragment shader from \"" + self.shaderName + "\"\n" + log);
+            console.error("Error compiling fragment shader from \"" + self.fragmentName + "\"\n" + log);
         }
 
         // Shader Program
@@ -64,13 +76,12 @@ function Shader(shaderName, shaderCallback) {
         else self.isLoaded = true;
 
         // Delete unnecessary shaders (we have program)
-        gl.deleteShader(vertex);
         gl.deleteShader(fragment);
 
-        console.log("Shader \"" + self.shaderName + "\" compiled")
+        console.log("Shader \"" + self.fragmentName + "\" compiled")
 
         // Save shader instance
-        Shader.shadersMap[self.shaderName] = self;
+        Shader.shadersMap[self.fragmentName] = self;
 
         if (shaderCallback !== undefined) {
             shaderCallback();
@@ -117,18 +128,22 @@ Shader.getShader = function(shaderName) {
 }
 
 // Prevents compiling a single shader multiple times. The function returns shader instances
-Shader.registerShader = function(shaderName) {
-    Shader.precompileRegistry.push(shaderName);
+Shader.registerShader = function(vertexName, fragmentName) {
+    Shader.precompileRegistry.push({vertexName, fragmentName});
 }
 
+// Compiles all shaders in the precompile registry
 Shader.precompileShaders = function(shaderCallback) {
     for (var i = 0; i < Shader.precompileRegistry.length; i++) {
-        var shaderName = Shader.precompileRegistry[i];
-        Shader.shadersMap[shaderName] = new Shader(shaderName, shaderCallback);
+        var vertexName = Shader.precompileRegistry[i].vertexName;
+        var fragmentName = Shader.precompileRegistry[i].fragmentName;
+        Shader.shadersMap[fragmentName] = new Shader(vertexName, fragmentName, shaderCallback);
     }
 }
 
 // Map containing map instances
 Shader.shadersMap = {};
-// Map containing map instances
+// Array containing shader names to compile
 Shader.precompileRegistry = [];
+// Map containing already compiled vertex shaders to avoid recompilation
+Shader.vertexShaders = {};

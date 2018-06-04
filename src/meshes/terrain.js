@@ -2,37 +2,17 @@ function Terrain(scale) {
 
     this.shader;
     this.scale = scale;
-    this.firstCreation = true;
 
     this.vao;
     this.vbo;
     this.vboUvs;
     this.vboBarycentric;
-    this.vboNormals;
-    this.vboHeightmap;
     this.ebo;
     this.showWireframe = 0;
-
-    this.isReady = false;
 
     var self = this;
 
     this.buildTerrain = function() {
-        var minX = Infinity;
-        var minY = Infinity;
-        var minZ = Infinity;
-        var maxX = -Infinity;
-        var maxY = -Infinity;
-        var maxZ = -Infinity;
-
-        self.vertices = [];
-        self.uvs = [];
-        self.barycentricBuffer = [];
-        self.indices = [];
-        self.heightmap = [];
-        self.heightmapHeightScale = 0;
-        self.heightmapTexture = undefined;
-        self.normalsTexture = undefined;
 
         // Get heightmap from output node TODO: This is probably not the best way to do it
         var heightmapOBJ = Editor.outputNode.getOutputData(0);
@@ -43,17 +23,25 @@ function Terrain(scale) {
         self.size = heightmapOBJ.size;
         self.heightmapHeightScale = heightmapOBJ.heightScale;
 
+        // Instanciate buffers
+        self.vertices = new Float32Array(self.size * self.size * 3);
+        self.uvs = new Float32Array(self.size * self.size * 2);
+        self.barycentricBuffer = new Float32Array(self.size * self.size * 3);
+        self.indices = new Uint32Array(self.size * self.size * 2 - 3);
+
         // -- Create the grid --
         // Store vertices
+        var counterVert = 0;
+        var counterUvs = 0;
         for (var height = -self.size/2; height < self.size/2; height++) {
             for (var width = -self.size/2; width < self.size/2; width++) {
                 // Add vertex
-                self.vertices.push(width * self.scale);    // x
-                self.vertices.push(0);                     // y
-                self.vertices.push(height * self.scale);   // z
+                self.vertices[counterVert++] = (width * self.scale);    // x
+                self.vertices[counterVert++] = (0);                     // y
+                self.vertices[counterVert++] = (height * self.scale);   // z
 
-                self.uvs.push((width + self.size / 2) / self.size);
-                self.uvs.push((height + self.size / 2) / self.size);
+                self.uvs[counterUvs++] = ((width + self.size / 2) / self.size);
+                self.uvs[counterUvs++] = ((height + self.size / 2) / self.size);
             }
         }
 
@@ -77,12 +65,13 @@ function Terrain(scale) {
         }
 
         // Store barycentric points used for wireframe
+        var counter = 0;
         for (var i = 0; i < self.size; i++) {
             for (var j = 0; j < self.size; j++) {
                 lastBaryPoint = currentBaryPoint.clone();
-                self.barycentricBuffer.push(currentBaryPoint.x);
-                self.barycentricBuffer.push(currentBaryPoint.y);
-                self.barycentricBuffer.push(currentBaryPoint.z);
+                self.barycentricBuffer[counter++] = (currentBaryPoint.x);
+                self.barycentricBuffer[counter++] = (currentBaryPoint.y);
+                self.barycentricBuffer[counter++] = (currentBaryPoint.z);
                 nextBaryPoint(currentBaryPoint);
             }
             if ((self.size + 1) % 3 == 1)
@@ -101,22 +90,22 @@ function Terrain(scale) {
 
     	// Store indices
     	var row, col;
+        var counter = 0;
     	for (row = 0; row < self.size - 1; row++) {
 
-            if (row != 0 && row != self.size -1)
-                self.indices.push(row * self.size);
+            if (row != 0 && row != self.size - 1) {
+                self.indices[counter++] = (row * self.size);
+            }
         	// Generate indices for Triangle Strip rendering
         	for (col = 0; col < self.size; col++) {
-                self.indices.push(col + row * self.size);
-                self.indices.push(col + (row + 1) * self.size);
+                self.indices[counter++] = (col + row * self.size);
+                self.indices[counter++] = (col + (row + 1) * self.size);
         	}
         	// Generate degenerated triangles to change row
         	if (col == self.size && row < self.size - 1) {
-                self.indices.push((col - 1) + (row + 1) * self.size);
+                self.indices[counter++] = ((col - 1) + (row + 1) * self.size);
         	}
     	}
-
-        self.firstCreation = false;
     }
 
     this.setupTerrain = function() {
@@ -127,64 +116,56 @@ function Terrain(scale) {
         self.vao = new VertexArray();
 
         // VertexBuffer to store vertex positions
-        self.vbo = new VertexBuffer(new Float32Array(self.vertices), gl.STATIC_DRAW);
+        self.vbo = new VertexBuffer(self.vertices, gl.STATIC_DRAW);
 
         // The attribute position in the shader
         gl.enableVertexAttribArray(0);
         gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
 
         // VertexBuffer to store uvs
-        self.vboUvs = new VertexBuffer(new Float32Array(self.uvs), gl.STATIC_DRAW);
+        self.vboUvs = new VertexBuffer(self.uvs, gl.STATIC_DRAW);
 
         // The attribute position in the shader
         gl.enableVertexAttribArray(1);
         gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 0, 0);
 
         // VertexBuffer to store barycentric positions (for wireframe rendering)
-        self.vboBarycentric = new VertexBuffer(new Float32Array(self.barycentricBuffer), gl.STATIC_DRAW);
+        self.vboBarycentric = new VertexBuffer(self.barycentricBuffer, gl.STATIC_DRAW);
 
         // The attribute position in the shader
         gl.enableVertexAttribArray(2);
         gl.vertexAttribPointer(2, 3, gl.FLOAT, false, 0, 0);
 
         // IndexBuffer to store vertex indices
-        self.ebo = new IndexBuffer(new Uint32Array(self.indices), gl.STATIC_DRAW);
+        self.ebo = new IndexBuffer(self.indices, gl.STATIC_DRAW);
 
         self.vao.unbind();
-
-        self.isReady = true;
     }
 
     this.shader = Shader.getShader("terrain");
     this.setupTerrain();
 
     this.render = function(camera) {
-        if (this.isReady) {
-            this.vao.bind();
-            this.shader.enable();
+        this.vao.bind();
+        this.shader.enable();
 
-            this.shader.setMatrix4("u_mvp", camera.vp);
-            this.shader.setFloat("u_heightmapScale", this.heightmapHeightScale);
-            this.shader.setInt("u_showWireframe", this.showWireframe)
+        this.shader.setMatrix4("u_mvp", camera.vp);
+        this.shader.setFloat("u_heightmapScale", this.heightmapHeightScale);
+        this.shader.setInt("u_showWireframe", this.showWireframe)
 
-            // Set heightmap and normals textures
-            this.shader.setInt("u_heightmapTexture", 0)
-            gl.activeTexture(gl.TEXTURE0);
-            this.heightmapTexture.bind();
-            this.shader.setInt("u_normalsTexture", 1)
-            gl.activeTexture(gl.TEXTURE1);
-            this.normalsTexture.bind();
-            this.shader.setInt("u_colorTexture", 2)
-            gl.activeTexture(gl.TEXTURE2);
-            this.colorTexture.bind();
+        // Set heightmap and normals textures
+        this.shader.setInt("u_heightmapTexture", 0)
+        gl.activeTexture(gl.TEXTURE0);
+        this.heightmapTexture.bind();
+        this.shader.setInt("u_normalsTexture", 1)
+        gl.activeTexture(gl.TEXTURE1);
+        this.normalsTexture.bind();
+        this.shader.setInt("u_colorTexture", 2)
+        gl.activeTexture(gl.TEXTURE2);
+        this.colorTexture.bind();
 
-            // Used for lightning
-            this.shader.setVec3("u_eye", camera.eye);
-            this.shader.setMatrix4("u_view", camera.view);
-
-            gl.drawElements(gl.TRIANGLE_STRIP, this.indices.length, gl.UNSIGNED_INT, 0);
-            this.shader.disable();
-            this.vao.unbind();
-        }
+        gl.drawElements(gl.TRIANGLE_STRIP, this.indices.length, gl.UNSIGNED_INT, 0);
+        this.shader.disable();
+        this.vao.unbind();
     }
 }

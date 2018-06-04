@@ -9,9 +9,7 @@ out vec3 eye_relative_position;
 out vec3 oVertex;
 out vec2 oUvs;
 
-uniform vec3 u_eye;
 uniform mat4 u_mvp;
-uniform mat4 u_view;
 uniform sampler2D u_heightmap;
 uniform float u_heightmapScale;
 

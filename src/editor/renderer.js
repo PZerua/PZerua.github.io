@@ -46,14 +46,14 @@ function Renderer(canvas) {
 		}
 	}
 
-	Shader.registerShader("terrain");
-	Shader.registerShader("axes");
-	Shader.registerShader("perlinNoise");
-	Shader.registerShader("valueNoise");
-	Shader.registerShader("cellularNoise");
-	Shader.registerShader("calcNormals");
-	Shader.registerShader("calcColor");
-	Shader.registerShader("powFilter");
+	Shader.registerShader("terrain", "terrain");
+	Shader.registerShader("axes", "axes");
+	Shader.registerShader("common", "perlinNoise");
+	Shader.registerShader("common", "valueNoise");
+	Shader.registerShader("common", "cellularNoise");
+	Shader.registerShader("common", "calcNormals");
+	Shader.registerShader("common", "calcColor");
+	Shader.registerShader("common", "powFilter");
 	Shader.precompileShaders(precompileShadersCallback);
 
 }
