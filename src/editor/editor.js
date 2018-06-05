@@ -118,6 +118,21 @@ var Editor = {
 			self.centerCamera()
 		};
 
+		var saveButton = document.getElementById("saveButton")
+		saveButton.onclick = function() {
+			var a = document.createElement('a');
+			var json = JSON.stringify( self.graph.serialize() );
+			a.setAttribute('href', 'data:text/plain;charset=utf-u,' + encodeURIComponent(json));
+			a.setAttribute('download', "Workflow.json");
+			a.click()
+		};
+
+		var loadFile = document.getElementById("loadFile")
+		loadFile.addEventListener('change', function() {
+			var url = window.URL.createObjectURL(loadFile.files[0]);
+			self.graph.load(url);
+		});
+
 		mainLoop();
 	},
 	centerCamera: function() {

@@ -6,6 +6,10 @@ html, body {
     overflow: hidden;
 }
 
+#saveButton {
+    margin-left: auto
+}
+
 .button {
     background-color: #008c9e;
     border: none;
