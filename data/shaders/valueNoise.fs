@@ -25,11 +25,10 @@ float noise( in vec2 p )
 
     // Quintic interpolation
     vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
-    //vec2 u = f*f*(3.0-2.0*f);
 
     // Interpolate in x axis
-    float a = mix( hash( i + vec2(0.0,0.0) ), hash( i + vec2(1.0,0.0) ), u.x);
-    float b = mix( hash( i + vec2(0.0,1.0) ), hash( i + vec2(1.0,1.0) ), u.x);
+    float a = mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x);
+    float b = mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x);
 
     // Interpolate in y axis
     return mix(a, b, u.y);
@@ -40,7 +39,7 @@ void main (void)
     vec2 uv = oUvs;
 
     float f = 0.0;
-    float amplitude = u_amplitude;
+    float amplitude = u_amplitude * 0.65;
 
     uv *= u_frequency;
     mat2 m = mat2( 1.6,  1.2, -1.2,  1.6 );
@@ -53,6 +52,4 @@ void main (void)
     f = 0.5 + 0.5*f;
 
     fragColor = vec4(f, f, f, 1.0);
-
-    //fragColor = vec4(f);
 }

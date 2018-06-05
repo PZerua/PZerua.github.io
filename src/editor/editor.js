@@ -142,7 +142,7 @@ function mainLoop() {
 	Editor.prevMousePos.x = Editor.mousePos.x;
 	Editor.prevMousePos.y = Editor.mousePos.y;
 
-	if (Editor.currentKeys["Shift"] === true) {
+	if (Editor.currentKeys["shift"] === true) {
 		var vel = 10.0;
 	} else {
 		var vel = 5.0;
@@ -181,7 +181,6 @@ window.addEventListener("resize", function(event) {
 
 Editor.glCanvas.addEventListener("mousemove", function(event) {
 
-
 	Editor.mousePos.x = event.clientX;
 	Editor.mousePos.y = event.clientY;
 
@@ -201,12 +200,12 @@ Editor.glCanvas.addEventListener("mouseup", function(event) {
 
 document.addEventListener("keydown", function (event) {
 
-	Editor.currentKeys[event.key] = true;
+	Editor.currentKeys[event.key.toLowerCase()] = true;
 
 }, true);
 
 document.addEventListener("keyup", function (event) {
 
-	Editor.currentKeys[event.key] = false;
+	Editor.currentKeys[event.key.toLowerCase()] = false;
 
 }, true);

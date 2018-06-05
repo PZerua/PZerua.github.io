@@ -28,7 +28,7 @@ ValueNoiseNode.prototype.onExecute = function() {
     // Receive size
     this.heighmapOBJ.size = this.getInputData(0);
     if (this.heighmapOBJ.size === undefined)
-        this.heighmapOBJ.size = 256;
+        this.heighmapOBJ.size = 1024;
 
     // Receive amplitude
     this.amplitude = this.getInputData(1);
@@ -38,17 +38,17 @@ ValueNoiseNode.prototype.onExecute = function() {
     // Receive frequency
     this.frequency = this.getInputData(2);
     if (this.frequency === undefined)
-        this.frequency = 1;
+        this.frequency = 3;
 
     // Receive octaves
     this.octaves = this.getInputData(3);
     if (this.octaves === undefined)
-        this.octaves = 4;
+        this.octaves = 8;
 
     // Receive mesh height scale
     this.heighmapOBJ.heightScale = this.getInputData(4);
     if (this.heighmapOBJ.heightScale === undefined)
-        this.heighmapOBJ.heightScale = 150;
+        this.heighmapOBJ.heightScale = 200;
 
     // Define custom uniforms for the framebuffer's shader
     var self = this;
@@ -63,6 +63,8 @@ ValueNoiseNode.prototype.onExecute = function() {
     this.heighmapOBJ.heightmapTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null);
     // Create framebuffer providing the texture and a custom shader
     this.fboHeightmap = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.heighmapOBJ.heightmapTexture, "valueNoise", setHeightmapUniformsCallback);
+
+    this.fboHeightmap.render();
 
     this.setOutputData(0, this.heighmapOBJ);
 }

@@ -63,22 +63,25 @@ html, body {
 }
 
 #textureContainer {
-    box-sizing: border-box;
     position: absolute;
-    right: 0px;
-    top: 45%;
-    z-index: 1000;
-    height: 55%;
-    width: 15%;
-    display: block;
+    right: 45%;
+    top: 0px;
+    height: 150px;
+    width: 450px;
+    display: flex;
 }
 
 #heightmapTex {
-    width: 100%;
-    height: 50%;
+    width: 33%;
+    height: 100%;
 }
 
 #normalsTex {
-    width: 100%;
-    height: 50%;
+    width: 33%;
+    height: 100%;
+}
+
+#colorTex {
+    width: 34%;
+    height: 100%;
 }

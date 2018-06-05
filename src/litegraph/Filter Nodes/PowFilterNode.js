@@ -20,7 +20,7 @@ PowFilterNode.prototype.onExecute = function() {
     if (heightmapOBJ === undefined) {
         return
     } else {
-        this.heighmapOBJ = Object.assign({}, this.getInputData(0));
+        this.heighmapOBJ = Object.assign({}, heightmapOBJ);
     }
 
     this.exponent = this.getInputData(1);

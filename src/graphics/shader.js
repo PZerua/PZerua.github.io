@@ -4,11 +4,9 @@ function Shader(vertexName, fragmentName, shaderCallback) {
     this.isLoaded = false;
     this.vertexName = vertexName;
     this.fragmentName = fragmentName;
-    this.isVertexAdded = Shader.vertexShaders[vertexName] !== undefined
 
     var numCompleted = 0;
     var result = [];
-    var numToCompile = this.isVertexAdded ? 1 : 2
 
     // Callback that calls compileShaders when both files are loaded
     function loadedCallback(text, index) {
@@ -16,37 +14,26 @@ function Shader(vertexName, fragmentName, shaderCallback) {
         numCompleted++;
 
         // When both sources are loaded, compile them
-        if (numCompleted == numToCompile)
+        if (numCompleted == 2)
             compileShaders(result);
     }
 
-    // Only read vertex shader if it was not already loaded
-    if (!this.isVertexAdded) {
-        Shader.vertexShaders[vertexName] = {name: vertexName, id : 0};
-        loadFile("data/shaders/" + vertexName + ".vs", loadedCallback, 0);
-    }
-
+    loadFile("data/shaders/" + vertexName + ".vs", loadedCallback, 0);
     loadFile("data/shaders/" + fragmentName + ".fs", loadedCallback, 1);
 
     var self = this;
 
     function compileShaders(shaderTexts)
     {
-        if (!self.isVertexAdded) {
-            // Compile vertex source
-            var vertex = gl.createShader(gl.VERTEX_SHADER);
-            gl.shaderSource(vertex, shaderTexts[0]);
-            gl.compileShader(vertex);
-            // Print compile errors for vertex compilation
-            if (!gl.getShaderParameter(vertex, gl.COMPILE_STATUS))
-            {
-                var log = gl.getShaderInfoLog(vertex);
-                console.error("Error compiling vertex shader from \"" + self.vertexName + "\"\n" + log);
-            }
-
-            Shader.vertexShaders[self.vertexName].id = vertex;
-        } else {
-            var vertex = Shader.vertexShaders[self.vertexName].id;
+        // Compile vertex source
+        var vertex = gl.createShader(gl.VERTEX_SHADER);
+        gl.shaderSource(vertex, shaderTexts[0]);
+        gl.compileShader(vertex);
+        // Print compile errors for vertex compilation
+        if (!gl.getShaderParameter(vertex, gl.COMPILE_STATUS))
+        {
+            var log = gl.getShaderInfoLog(vertex);
+            console.error("Error compiling vertex shader from \"" + self.vertexName + "\"\n" + log);
         }
 
         // Compile fragment source

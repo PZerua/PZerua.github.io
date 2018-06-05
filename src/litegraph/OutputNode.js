@@ -57,9 +57,22 @@ OutputNode.prototype.onExecute = function() {
 
     this.fboColor.render();
 
-    // Display texture in editor
-    var img = this.fboNormals.toImage();
-    var htmlImg = document.getElementById("normalsTex");
+    // Create framebuffer providing the texture and a custom shader
+    this.fboHeightmap = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.heighmapOBJ.heightmapTexture);
+
+    // Display heightmap texture in editor
+    var img = this.fboHeightmap.toImage();
+    var htmlImg = document.getElementById("heightmapTex");
+    htmlImg.src = img.src;
+
+    // Display normal texture in editor
+    img = this.fboNormals.toImage();
+    htmlImg = document.getElementById("normalsTex");
+    htmlImg.src = img.src;
+
+    // Display color texture in editor
+    img = this.fboColor.toImage();
+    htmlImg = document.getElementById("colorTex");
     htmlImg.src = img.src;
 
     this.setOutputData(0, this.heighmapOBJ);

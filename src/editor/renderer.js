@@ -54,6 +54,7 @@ function Renderer(canvas) {
 	Shader.registerShader("common", "calcNormals");
 	Shader.registerShader("common", "calcColor");
 	Shader.registerShader("common", "powFilter");
+	Shader.registerShader("common", "mixFilter");
 	Shader.precompileShaders(precompileShadersCallback);
 
 }

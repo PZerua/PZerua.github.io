@@ -65,5 +65,5 @@ void main()
 
     f = smoothstep( -0.7, 0.7, f );
 
-    fragColor = vec4(f);
+    fragColor = vec4(f, f, f, 1.0);
 }

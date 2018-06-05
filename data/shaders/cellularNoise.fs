@@ -19,7 +19,7 @@ float noise(vec2 st) {
     vec2 i_st = floor(st);
     vec2 f_st = fract(st);
 
-    float m_dist = 1.;  // minimun distance
+    float m_dist = 1.;  // minimum distance
 
     for (int y= -1; y <= 1; y++) {
         for (int x= -1; x <= 1; x++) {
@@ -56,8 +56,6 @@ void main() {
         f  += amplitude * noise( uv ); uv = m*uv;
         amplitude /= 2.0;
     }
-
-    //f = f * f * f;
 
     fragColor = vec4(f, f, f, 1.0);
 }

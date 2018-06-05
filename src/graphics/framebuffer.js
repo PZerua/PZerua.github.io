@@ -53,7 +53,9 @@ class FrameBuffer {
 
         this.vao.unbind();
 
-        this.shader = Shader.getShader(shaderName);
+        if (shaderName) {
+            this.shader = Shader.getShader(shaderName);
+        }
     }
 
     bind() {
@@ -93,6 +95,12 @@ class FrameBuffer {
     }
 
     render() {
+
+        if (!this.shader) {
+            console.error("No shader specified in framebuffer")
+            return;
+        }
+
         this.bind();
         gl.viewport(0, 0, this.width, this.height);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);

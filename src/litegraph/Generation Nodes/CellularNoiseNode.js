@@ -28,7 +28,7 @@ CellularNoiseNode.prototype.onExecute = function() {
     // Receive size
     this.heighmapOBJ.size = this.getInputData(0);
     if (this.heighmapOBJ.size === undefined)
-        this.heighmapOBJ.size = 256;
+        this.heighmapOBJ.size = 1024;
 
     // Receive amplitude
     this.amplitude = this.getInputData(1);
@@ -38,17 +38,17 @@ CellularNoiseNode.prototype.onExecute = function() {
     // Receive frequency
     this.frequency = this.getInputData(2);
     if (this.frequency === undefined)
-        this.frequency = 1;
+        this.frequency = 3;
 
     // Receive octaves
     this.octaves = this.getInputData(3);
     if (this.octaves === undefined)
-        this.octaves = 4;
+        this.octaves = 8;
 
     // Receive mesh height scale
     this.heighmapOBJ.heightScale = this.getInputData(4);
     if (this.heighmapOBJ.heightScale === undefined)
-        this.heighmapOBJ.heightScale = 150;
+        this.heighmapOBJ.heightScale = 200;
 
     // Define custom uniforms for the framebuffer's shader
     var self = this;
@@ -65,11 +65,6 @@ CellularNoiseNode.prototype.onExecute = function() {
     this.fboHeightmap = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.heighmapOBJ.heightmapTexture, "cellularNoise", setHeightmapUniformsCallback);
 
     this.fboHeightmap.render();
-
-    // Display texture in editor
-    var img = this.fboHeightmap.toImage();
-    var htmlImg = document.getElementById("heightmapTex");
-    htmlImg.src = img.src;
 
     // var link = document.createElement('a');
     // link.download = "test.png";
