@@ -15,7 +15,7 @@ function Terrain(scale) {
     this.buildTerrain = function() {
 
         // Get heightmap from output node TODO: This is probably not the best way to do it
-        var heightmapOBJ = Editor.outputNode.getOutputData(0);
+        var heightmapOBJ = Editor.graph.findNodesByTitle("Output")[0].getOutputData(0);
 
         self.heightmapTexture = heightmapOBJ.heightmapTexture;
         self.normalsTexture = heightmapOBJ.normalsTexture;
