@@ -34,6 +34,8 @@ CustomHeightmapNode.prototype.onExecute = function() {
     if (this.heighmapOBJ.size === undefined) {
         this.heighmapOBJ.size = image.width;
     } else {
+        image.width = this.heighmapOBJ.size;
+        image.height = this.heighmapOBJ.size;
         // Resize
     }
 

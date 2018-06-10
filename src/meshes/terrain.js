@@ -15,7 +15,14 @@ function Terrain(scale) {
     this.buildTerrain = function() {
 
         // Get heightmap from output node TODO: This is probably not the best way to do it
-        var heightmapOBJ = Editor.graph.findNodesByTitle("Output")[0].getOutputData(0);
+        var outputNode = Editor.graph.findNodesByTitle("Output")[0];
+
+        if (outputNode) {
+            var heightmapOBJ = outputNode.getOutputData(0);
+        } else {
+            console.error("No Output node in graph");
+            return false;
+        }
 
         self.heightmapTexture = heightmapOBJ.heightmapTexture;
         self.normalsTexture = heightmapOBJ.normalsTexture;
@@ -106,11 +113,15 @@ function Terrain(scale) {
                 self.indices[counter++] = ((col - 1) + (row + 1) * self.size);
         	}
     	}
+
+        return true;
     }
 
     this.setupTerrain = function() {
 
-        self.buildTerrain();
+        if (!self.buildTerrain()) {
+            return;
+        }
 
         // -- Setup buffers --
         self.vao = new VertexArray();

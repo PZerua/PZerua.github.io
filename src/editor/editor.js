@@ -9,13 +9,6 @@ var Editor = {
 	currentKeys: {},
 	stats: new Stats(),
 	graph : new LGraph(),
-	sizeNode : undefined,
-	amplitudeNode : undefined,
-	octavesNode : undefined,
-	heightScaleNode : undefined,
-	frequencyNode : undefined,
-	perlinNode: undefined,
-	outputNode : undefined,
 	init : function() {
 
 		var container = document.getElementById("container")
@@ -31,33 +24,51 @@ var Editor = {
 		// Setup litegraph default nodes
 		this.sizeNode = LiteGraph.createNode("basic/const");
 		this.sizeNode.title = "Size";
-		this.sizeNode.pos = [200,500];
+		this.sizeNode.pos = [200,400];
 		this.graph.add(this.sizeNode);
 		this.sizeNode.setValue(1024.0);
 
 		this.amplitudeNode = LiteGraph.createNode("basic/const");
 		this.amplitudeNode.title = "Amplitude";
-		this.amplitudeNode.pos = [200,550];
+		this.amplitudeNode.pos = [200,450];
 		this.graph.add(this.amplitudeNode);
 		this.amplitudeNode.setValue(1.0);
 
 		this.frequencyNode = LiteGraph.createNode("basic/const");
 		this.frequencyNode.title = "Frequency";
-		this.frequencyNode.pos = [200,600];
+		this.frequencyNode.pos = [200,500];
 		this.graph.add(this.frequencyNode);
 		this.frequencyNode.setValue(3);
 
 		this.octavesNode = LiteGraph.createNode("basic/const");
 		this.octavesNode.title = "Octaves";
-		this.octavesNode.pos = [200,650];
+		this.octavesNode.pos = [200,550];
 		this.graph.add(this.octavesNode);
 		this.octavesNode.setValue(8.0);
 
 		this.heightScaleNode = LiteGraph.createNode("basic/const");
 		this.heightScaleNode.title = "Height Scale";
-		this.heightScaleNode.pos = [200,700];
+		this.heightScaleNode.pos = [200,600];
 		this.graph.add(this.heightScaleNode);
 		this.heightScaleNode.setValue(200.0);
+
+		this.perturbationNode = LiteGraph.createNode("basic/const");
+		this.perturbationNode.title = "Perturbation";
+		this.perturbationNode.pos = [200,650];
+		this.graph.add(this.perturbationNode);
+		this.perturbationNode.setValue(0.0);
+
+		this.xOffsetNode = LiteGraph.createNode("basic/const");
+		this.xOffsetNode.title = "X Offset";
+		this.xOffsetNode.pos = [200,700];
+		this.graph.add(this.xOffsetNode);
+		this.xOffsetNode.setValue(0.0);
+
+		this.yOffsetNode = LiteGraph.createNode("basic/const");
+		this.yOffsetNode.title = "Y Offset";
+		this.yOffsetNode.pos = [200,750];
+		this.graph.add(this.yOffsetNode);
+		this.yOffsetNode.setValue(0.0);
 
 		this.exponentNode = LiteGraph.createNode("basic/const");
 		this.exponentNode.title = "Exponent";
@@ -69,25 +80,28 @@ var Editor = {
 		this.powFilterNode.pos = [800, 600];
 		this.graph.add(this.powFilterNode);
 
-		this.perlinNode = LiteGraph.createNode("heightmap/cellularNoise");
-		this.perlinNode.pos = [500,500];
-		this.graph.add(this.perlinNode);
+		this.noiseNode = LiteGraph.createNode("heightmap/cellularNoise");
+		this.noiseNode.pos = [500,500];
+		this.graph.add(this.noiseNode);
 
 		this.exponentNode.connect(0, this.powFilterNode, 1);
 
 		var idx = 0;
 		// Sample nodes in order
-		this.sizeNode.connect(0, this.perlinNode, idx++ );
-		this.amplitudeNode.connect(0, this.perlinNode, idx++ );
-		this.frequencyNode.connect(0, this.perlinNode, idx++ );
-		this.octavesNode.connect(0, this.perlinNode, idx++ );
-		this.heightScaleNode.connect(0, this.perlinNode, idx++ );
+		this.sizeNode.connect(0, this.noiseNode, idx++ );
+		this.amplitudeNode.connect(0, this.noiseNode, idx++ );
+		this.frequencyNode.connect(0, this.noiseNode, idx++ );
+		this.octavesNode.connect(0, this.noiseNode, idx++ );
+		this.heightScaleNode.connect(0, this.noiseNode, idx++ );
+		this.perturbationNode.connect(0, this.noiseNode, idx++ );
+		this.xOffsetNode.connect(0, this.noiseNode, idx++ );
+		this.yOffsetNode.connect(0, this.noiseNode, idx++ );
 
 		this.outputNode = LiteGraph.createNode("heightmap/heightmapOutput");
 		this.outputNode.pos = [1000,500];
 		this.graph.add(this.outputNode);
 
-		this.perlinNode.connect(0, this.powFilterNode, 0);
+		this.noiseNode.connect(0, this.powFilterNode, 0);
 		this.powFilterNode.connect(0, this.outputNode, 0);
 
 		// Setup renderer and camera
@@ -131,6 +145,28 @@ var Editor = {
 		loadFile.addEventListener('change', function() {
 			var url = window.URL.createObjectURL(loadFile.files[0]);
 			self.graph.load(url);
+		});
+
+		// Get file data on drop
+		window.addEventListener('drop', function(e) {
+		    e.stopPropagation();
+		    e.preventDefault();
+		    var files = e.dataTransfer.files; // Array of all files
+
+		    for (var i=0, file; file=files[i]; i++) {
+		        if (file.type.match(/image.*/)) {
+		            var reader = new FileReader();
+
+		            reader.onload = function(e2) {
+		                // finished reading file data.
+		                var img = document.createElement('img');
+		                img.src= e2.target.result;
+		                document.body.appendChild(img);
+		            }
+
+		            reader.readAsDataURL(file); // start reading the file data.
+		        }
+		    }
 		});
 
 		mainLoop();

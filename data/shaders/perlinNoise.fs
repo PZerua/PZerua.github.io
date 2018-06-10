@@ -9,61 +9,64 @@ layout(location = 0) out vec4 fragColor;
 uniform int u_octaves;
 uniform float u_amplitude;
 uniform float u_frequency;
+uniform float u_perturbation;
+uniform float u_xOffset;
+uniform float u_yOffset;
 
-vec3 hash( vec3 p )
+vec2 hash(vec2 x)
 {
-	p = vec3( dot(p,vec3(127.1,311.7, 74.7)),
-			  dot(p,vec3(269.5,183.3,246.1)),
-			  dot(p,vec3(113.5,271.9,124.6)));
-	p = -1.0 + 2.0*fract(sin(p) * 43758.5453123);
-
-	return p;
+    const vec2 k = vec2( 0.3183099, 0.3678794 );
+    x = x*k + k.yx;
+    return -1.0 + 2.0*fract( 16.0 * k*fract( x.x*x.y*(x.x+x.y)) );
 }
 
-float noise( in vec3 p )
+float noise( in vec2 p )
 {
-    // Position in grid
-    vec3 i = floor( p );
-    // Offset in position
-    vec3 f = fract( p );
+	// Position in grid
+	vec2 i = floor( p );
+	// Offset in position
+	vec2 f = fract( p );
 
-    // Quintic interpolation
-	vec3 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
-    //vec3 u = f*f*(3.0-2.0*f);
+	// Quintic interpolation
+	vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
 
-    // Interpolate in x axis and z = 0
-    float u000 = mix(dot(hash(i + vec3(0.0, 0.0, 0.0)), f - vec3(0.0, 0.0, 0.0)), dot(hash(i + vec3(1.0, 0.0, 0.0)), f - vec3(1.0, 0.0, 0.0)), u.x);
-    float u010 = mix(dot(hash(i + vec3(0.0, 1.0, 0.0)), f - vec3(0.0, 1.0, 0.0)), dot(hash(i + vec3(1.0, 1.0, 0.0)), f - vec3(1.0, 1.0, 0.0)), u.x);
+	// Interpolate in x axis
+	float a = mix(dot(hash(i + vec2(0.0, 0.0)), f - vec2(0.0, 0.0)), dot(hash(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0)), u.x);
+	float b = mix(dot(hash(i + vec2(0.0, 1.0)), f - vec2(0.0, 1.0)), dot(hash(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0)), u.x);
 
-    // Interpolate in y axis and z = 0
-    float u110 = mix(u000, u010, u.y);
-
-    // Interpolate in x axis and z = 1
-    float u001 = mix(dot(hash(i + vec3(0.0, 0.0, 1.0)), f - vec3(0.0, 0.0, 1.0)), dot(hash(i + vec3(1.0, 0.0, 1.0)), f - vec3(1.0, 0.0, 1.0)), u.x);
-    float u011 = mix(dot(hash(i + vec3(0.0, 1.0, 1.0)), f - vec3(0.0, 1.0, 1.0)), dot(hash(i + vec3(1.0, 1.0, 1.0)), f - vec3(1.0, 1.0, 1.0)), u.x);
-
-    // Interpolate in y axis and z = 1
-    float u111 = mix(u001, u011, u.y);
-
-    return mix(u110, u111, u.z );
+	// Interpolate in y axis
+	return mix(a, b, u.y);
 }
 
-void main()
-{
-    vec2 uv = oUvs;
-
-    float amplitude = u_amplitude;
-
-    vec3 q = u_frequency*vec3(uv, 20.0);
-
+// Fractional Brownian Motion, generates fractal noise
+float fbm(in vec2 uv) {
     float f = 0.0;
 
+    // Apply offset to generation
+    uv.x += u_xOffset;
+    uv.y += u_yOffset;
+
+    // Apply frequency
+    uv *= u_frequency;
+
+    float amplitude = u_amplitude;
     for (int i = 0; i < u_octaves; i++) {
-        f  += amplitude * noise( q ); q *= 2.0;
+        f  += amplitude * noise( uv ); uv = 2.0*uv;
         amplitude /= 2.0;
     }
+    return f;
+}
 
-    f = smoothstep( -0.7, 0.7, f );
+void main() {
+    // Calculate perturbation offset
+    vec2 q = vec2(fbm(oUvs + vec2(0.0,0.0) ),
+               fbm(oUvs + vec2(5.2,1.3)));
 
-    fragColor = vec4(f, f, f, 1.0);
+    // Retreive color intensity with perturbation
+    float c = fbm(oUvs + u_perturbation*q);
+
+    // Map to range [0, 1]
+    c = 0.5 + 0.5*c;
+
+    fragColor = vec4(c, c, c, 1.0);
 }

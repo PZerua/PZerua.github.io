@@ -22,7 +22,8 @@ float noise(vec2 uv) {
     vec2 i_st = floor(uv);
     vec2 f_st = fract(uv);
 
-    float m_dist = 1.;  // minimum distance
+    float m_dist = 1.;  // last minimum distance
+    float m_dist2 = 1.;  // minimum distance before last
 
     for (int y= -1; y <= 1; y++) {
         for (int x= -1; x <= 1; x++) {
@@ -39,11 +40,17 @@ float noise(vec2 uv) {
             float dist = length(diff);
 
             // Keep the closer distance
-            m_dist = min(m_dist, dist);
+            if (dist < m_dist) {
+                m_dist2 = m_dist;
+                m_dist = dist;
+            }
+            else if (dist < m_dist2) {
+                m_dist2 = dist;
+            }
         }
     }
 
-    return m_dist;
+    return m_dist2 - m_dist;
 }
 
 // Fractional Brownian Motion, generates fractal noise
@@ -53,7 +60,7 @@ float fbm(in vec2 uv) {
     // Apply offset to generation
     uv.x += u_xOffset;
     uv.y += u_yOffset;
-    
+
     // Apply frequency
     uv *= u_frequency;
 

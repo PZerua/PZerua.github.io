@@ -51,10 +51,16 @@ function Renderer(canvas) {
 	Shader.registerShader("common", "perlinNoise");
 	Shader.registerShader("common", "valueNoise");
 	Shader.registerShader("common", "cellularNoise");
+	Shader.registerShader("common", "cellularNoise2");
 	Shader.registerShader("common", "calcNormals");
 	Shader.registerShader("common", "calcColor");
 	Shader.registerShader("common", "powFilter");
 	Shader.registerShader("common", "mixFilter");
+	Shader.registerShader("common", "noiseFilter");
+	Shader.registerShader("common", "clampFilter");
+	Shader.registerShader("common", "remapFilter");
+	Shader.registerShader("common", "blurFilter");
+	Shader.registerShader("common", "invertFilter");
 	Shader.precompileShaders(precompileShadersCallback);
 
 }
