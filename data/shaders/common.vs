@@ -10,5 +10,5 @@ out vec2 oUvs;
 void main(void)
 {
     oUvs = aUvs;
-	gl_Position = vec4( aVertex, 0.0, 1.0 );
+    gl_Position = vec4( aVertex, 0.0, 1.0 );
 }

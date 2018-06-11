@@ -41,7 +41,7 @@ class FrameBuffer {
         gl.enableVertexAttribArray(0);
         gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
-        // VertexBuffer to store vertex positions
+        // VertexBuffer to store uvs
         this.vboUvs = new VertexBuffer(new Float32Array(uvs), gl.STATIC_DRAW);
 
         // The attribute position in the shader
@@ -72,8 +72,6 @@ class FrameBuffer {
 
         // Read the contents of the framebuffer
         var pixels = new Uint8Array(this.width * this.height * 4 );
-        var a = gl.getParameter(gl.IMPLEMENTATION_COLOR_READ_TYPE);
-        var b = gl.getParameter(gl.IMPLEMENTATION_COLOR_READ_FORMAT);
         gl.readPixels(0, 0, this.width, this.height, this.texture.internalFormat, this.texture.type, pixels);
 
         this.unbind();

@@ -23,19 +23,18 @@ BlurFilterNode.prototype.onExecute = function() {
         this.heighmapOBJ = Object.assign({}, heightmapOBJ);
     }
 
-    this.radius = this.getInputData(1);
-    if (this.radius === undefined)
-        this.radius = 3.0;
+    var radius = this.getInputData(1);
+    if (radius === undefined)
+        radius = 3.0;
 
     var self = this;
-
     var setFilterUniformsCallback = function() {
         self.fboFilter.shader.setInt("u_heightmapTexture", 0);
         gl.activeTexture(gl.TEXTURE0);
         self.heighmapOBJ.heightmapTexture.bind();
 
         self.fboFilter.shader.setFloat("u_size", self.heighmapOBJ.size);
-        self.fboFilter.shader.setFloat("u_radius", self.radius);
+        self.fboFilter.shader.setFloat("u_radius", radius);
     }
 
     // --- Create normal map and save it in the provided texture ---

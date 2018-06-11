@@ -18,9 +18,10 @@ vec2 random2( vec2 p ) {
 }
 
 float noise(vec2 uv) {
-    // Tile the space
-    vec2 i_st = floor(uv);
-    vec2 f_st = fract(uv);
+    // Position in grid
+    vec2 i = floor( uv );
+    // Offset in position
+    vec2 f = fract( uv );
 
     float m_dist = 1.;  // minimum distance
 
@@ -30,10 +31,10 @@ float noise(vec2 uv) {
             vec2 neighbor = vec2(float(x),float(y));
 
             // Random position from current + neighbor place in the grid
-            vec2 point = random2(i_st + neighbor);
+            vec2 point = random2(i + neighbor);
 
             // Vector between the pixel and the point
-            vec2 diff = neighbor + point - f_st;
+            vec2 diff = neighbor + point - f;
 
             // Distance to the point
             float dist = length(diff);
@@ -53,7 +54,7 @@ float fbm(in vec2 uv) {
     // Apply offset to generation
     uv.x += u_xOffset;
     uv.y += u_yOffset;
-    
+
     // Apply frequency
     uv *= u_frequency;
 

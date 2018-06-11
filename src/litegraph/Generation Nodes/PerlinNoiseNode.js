@@ -21,7 +21,7 @@ function PerlinNoiseNode() {
     }
 }
 
-//name to show and position
+//name to show
 PerlinNoiseNode.title = "Perlin Noise";
 
 //function to call when the node is executed

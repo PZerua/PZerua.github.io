@@ -23,7 +23,6 @@ InvertFilterNode.prototype.onExecute = function() {
     }
 
     var self = this;
-
     var setFilterUniformsCallback = function() {
         self.fboFilter.shader.setInt("u_heightmapTexture", 0);
         gl.activeTexture(gl.TEXTURE0);

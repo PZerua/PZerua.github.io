@@ -2,8 +2,8 @@
 function ClampFilterNode() {
 
     this.addInput("Heightmap");
-    this.addInput("Minimum");
-    this.addInput("Maximum");
+    this.addInput("From");
+    this.addInput("To");
     this.addOutput("Heightmap");
 
 }
@@ -24,13 +24,13 @@ ClampFilterNode.prototype.onExecute = function() {
         this.heighmapOBJ = Object.assign({}, heightmapOBJ);
     }
 
-    this.minimum = this.getInputData(1);
-    if (this.minimum === undefined)
-        this.minimum = 0.0;
+    from = this.getInputData(1);
+    if (from === undefined)
+        from = 0.0;
 
-    this.maximum = this.getInputData(2);
-    if (this.maximum === undefined)
-        this.maximum = 1.0;
+    to = this.getInputData(2);
+    if (to === undefined)
+        to = 1.0;
 
     var self = this;
 
@@ -39,8 +39,8 @@ ClampFilterNode.prototype.onExecute = function() {
         gl.activeTexture(gl.TEXTURE0);
         self.heighmapOBJ.heightmapTexture.bind();
 
-        self.fboFilter.shader.setFloat("u_minimum", self.minimum);
-        self.fboFilter.shader.setFloat("u_maximum", self.maximum);
+        self.fboFilter.shader.setFloat("u_from", from);
+        self.fboFilter.shader.setFloat("u_to", to);
     }
 
     // --- Create normal map and save it in the provided texture ---

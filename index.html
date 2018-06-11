@@ -36,9 +36,6 @@
         console.error("There is no support for WebGL2");
     }
     else {
-        gl.getExtension('OES_texture_float');
-        gl.getExtension('OES_texture_float_linear');
-        gl.getExtension('EXT_color_buffer_float')
         console.log("WebGL2 context loaded");
     }
 
@@ -75,6 +72,8 @@
 <script src="src/litegraph/Filter Nodes/RemapFilterNode.js"></script>
 <script src="src/litegraph/Filter Nodes/BlurFilterNode.js"></script>
 <script src="src/litegraph/Filter Nodes/InvertFilterNode.js"></script>
+<script src="src/litegraph/Filter Nodes/XJoinFilterNode.js"></script>
+<script src="src/litegraph/Filter Nodes/YJoinFilterNode.js"></script>
 <script src="src/litegraph/OutputNode.js"></script>
 <script src="src/meshes/terrain.js"></script>
 <script src="src/meshes/originAxes.js"></script>

@@ -20,10 +20,11 @@ void main(void)
 	// Map to range -1 - 1
 	height = height * 2.0 - 1.0;
 
+	// Apply displacement
 	oVertex = aVertex;
-	oUvs = aUvs;
 	oVertex.y = height * u_heightmapScale;
 
+	oUvs = aUvs;
 	oBarycentric = aBarycentric;
 	gl_Position = u_mvp * vec4( oVertex, 1.0 );
 }

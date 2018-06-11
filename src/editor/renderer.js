@@ -61,6 +61,8 @@ function Renderer(canvas) {
 	Shader.registerShader("common", "remapFilter");
 	Shader.registerShader("common", "blurFilter");
 	Shader.registerShader("common", "invertFilter");
+	Shader.registerShader("common", "xJoinFilter");
+	Shader.registerShader("common", "yJoinFilter");
 	Shader.precompileShaders(precompileShadersCallback);
 
 }

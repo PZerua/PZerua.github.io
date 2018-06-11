@@ -21,7 +21,7 @@ function ValueNoiseNode() {
     }
 }
 
-//name to show and position
+//name to show
 ValueNoiseNode.title = "Value Noise";
 
 //function to call when the node is executed

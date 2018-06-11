@@ -53,7 +53,6 @@ function Terrain(scale) {
         }
 
         // Face camera to mesh
-        // TODO: Review this
         self.center = new vec3(self.size / 2.0, 0, self.size / 2.0);
         self.radious = Math.sqrt((self.center.x) * (self.center.x) + (self.center.z) * (self.center.z));
 

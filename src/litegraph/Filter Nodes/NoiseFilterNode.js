@@ -24,23 +24,22 @@ NoiseFilterNode.prototype.onExecute = function() {
         this.heighmapOBJ = Object.assign({}, heightmapOBJ);
     }
 
-    this.frequency = this.getInputData(1);
-    if (this.frequency === undefined)
-        this.frequency = 1.0;
+    var frequency = this.getInputData(1);
+    if (frequency === undefined)
+        frequency = 0.3;
 
-    this.amplitude = this.getInputData(2);
-    if (this.amplitude === undefined)
-        this.amplitude = 1.0;
+    amplitude = this.getInputData(2);
+    if (amplitude === undefined)
+        amplitude = 1.0;
 
     var self = this;
-
     var setFilterUniformsCallback = function() {
         self.fboFilter.shader.setInt("u_heightmapTexture", 0);
         gl.activeTexture(gl.TEXTURE0);
         self.heighmapOBJ.heightmapTexture.bind();
 
-        self.fboFilter.shader.setFloat("u_frequency", self.frequency);
-        self.fboFilter.shader.setFloat("u_amplitude", self.amplitude);
+        self.fboFilter.shader.setFloat("u_frequency", frequency);
+        self.fboFilter.shader.setFloat("u_amplitude", amplitude);
     }
 
     // --- Create normal map and save it in the provided texture ---

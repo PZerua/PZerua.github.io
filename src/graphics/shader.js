@@ -105,16 +105,6 @@ function Shader(vertexName, fragmentName, shaderCallback) {
 }
 
 // Prevents compiling a single shader multiple times. The function returns shader instances
-Shader.getShader = function(shaderName) {
-    if (Shader.shadersMap[shaderName] !== undefined) {
-        return Shader.shadersMap[shaderName];
-    }
-    else {
-        console.error("The shader " +  shaderName + " was not precompiled");
-    }
-}
-
-// Prevents compiling a single shader multiple times. The function returns shader instances
 Shader.registerShader = function(vertexName, fragmentName) {
     Shader.precompileRegistry.push({vertexName, fragmentName});
 }
@@ -125,6 +115,16 @@ Shader.precompileShaders = function(shaderCallback) {
         var vertexName = Shader.precompileRegistry[i].vertexName;
         var fragmentName = Shader.precompileRegistry[i].fragmentName;
         Shader.shadersMap[fragmentName] = new Shader(vertexName, fragmentName, shaderCallback);
+    }
+}
+
+// Prevents compiling a single shader multiple times. The function returns shader instances
+Shader.getShader = function(shaderName) {
+    if (Shader.shadersMap[shaderName] !== undefined) {
+        return Shader.shadersMap[shaderName];
+    }
+    else {
+        console.error("The shader " +  shaderName + " was not precompiled");
     }
 }
 

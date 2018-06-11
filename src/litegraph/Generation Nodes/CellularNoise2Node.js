@@ -21,8 +21,8 @@ function CellularNoise2Node() {
     }
 }
 
-//name to show and position
-CellularNoise2Node.title = "Cellular Noise 2";
+//name to show
+CellularNoise2Node.title = "Cellular Noise Sub";
 
 //function to call when the node is executed
 CellularNoise2Node.prototype.onExecute = function() {

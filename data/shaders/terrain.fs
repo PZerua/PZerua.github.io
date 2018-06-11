@@ -44,8 +44,4 @@ void main (void)
     } else {
         fragColor = vec4(color, 1.0);
     }
-
-    //fragColor = vec4(heightmapTex.rrr, 1.0);
-    //fragColor = normalsTex;
-
 }

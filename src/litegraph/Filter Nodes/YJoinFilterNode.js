@@ -1,20 +1,21 @@
 //node constructor class
-function MixFilterNode() {
+function YJoinFilterNode() {
 
     this.addInput("Heightmap0");
     this.addInput("Heightmap1");
+    this.addInput("Offset");
     this.addInput("Threshold");
     this.addOutput("Heightmap");
 
 }
 
 //name to show
-MixFilterNode.title = "Mix Filter";
-MixFilterNode.position = [10, 50];
-MixFilterNode.size = [300, 50];
+YJoinFilterNode.title = "Y Join Filter";
+YJoinFilterNode.position = [10, 50];
+YJoinFilterNode.size = [300, 50];
 
 //function to call when the node is executed
-MixFilterNode.prototype.onExecute = function() {
+YJoinFilterNode.prototype.onExecute = function() {
 
     // Receive heightmap Obj and copy its contents (I don't want to modify it being a reference, bad things can happen)
     var heightmapOBJ_0 = this.getInputData(0);
@@ -37,9 +38,13 @@ MixFilterNode.prototype.onExecute = function() {
         return;
     }
 
-    var threshold = this.getInputData(2);
+    var offset = this.getInputData(2);
+    if (offset === undefined)
+        offset = 0.5
+
+    var threshold = this.getInputData(3);
     if (threshold === undefined)
-        threshold = 0.5;
+        threshold = 0.2;
 
     var self = this;
     var setFilterUniformsCallback = function() {
@@ -51,6 +56,7 @@ MixFilterNode.prototype.onExecute = function() {
         gl.activeTexture(gl.TEXTURE1);
         self.heightmapOBJ_1.heightmapTexture.bind();
 
+        self.fboFilter.shader.setFloat("u_offset", offset);
         self.fboFilter.shader.setFloat("u_threshold", threshold);
     }
 
@@ -58,7 +64,7 @@ MixFilterNode.prototype.onExecute = function() {
     // Create texture to be filled by the framebuffer
     var filterTexture = new Texture(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null);
     // Create framebuffer providing the texture and a custom shader
-    this.fboFilter = new FrameBuffer(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, filterTexture, "mixFilter", setFilterUniformsCallback);
+    this.fboFilter = new FrameBuffer(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, filterTexture, "yJoinFilter", setFilterUniformsCallback);
 
     this.fboFilter.render();
 
@@ -68,4 +74,4 @@ MixFilterNode.prototype.onExecute = function() {
 }
 
 //register in the system
-LiteGraph.registerNodeType("heightmap/mixFilter", MixFilterNode);
+LiteGraph.registerNodeType("heightmap/yJoinFilter", YJoinFilterNode);

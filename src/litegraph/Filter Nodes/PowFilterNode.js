@@ -23,18 +23,17 @@ PowFilterNode.prototype.onExecute = function() {
         this.heighmapOBJ = Object.assign({}, heightmapOBJ);
     }
 
-    this.exponent = this.getInputData(1);
-    if (this.exponent === undefined)
-        this.exponent = 1.0;
+    var exponent = this.getInputData(1);
+    if (exponent === undefined)
+        exponent = 1.0;
 
     var self = this;
-
     var setFilterUniformsCallback = function() {
         self.fboFilter.shader.setInt("u_heightmapTexture", 0);
         gl.activeTexture(gl.TEXTURE0);
         self.heighmapOBJ.heightmapTexture.bind();
 
-        self.fboFilter.shader.setFloat("u_exponent", self.exponent);
+        self.fboFilter.shader.setFloat("u_exponent", exponent);
     }
 
     // --- Create normal map and save it in the provided texture ---

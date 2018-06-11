@@ -21,7 +21,7 @@ function CellularNoiseNode() {
     }
 }
 
-//name to show and position
+//name to show
 CellularNoiseNode.title = "Cellular Noise";
 
 //function to call when the node is executed
