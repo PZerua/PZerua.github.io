@@ -99,8 +99,8 @@ function Shader(vertexName, fragmentName, shaderCallback) {
         gl.uniform1f(gl.getUniformLocation(this.programId, name), value);
     }
 
-    this.setFloatVector = function(name, values, count) {
-        gl.uniform1fv(gl.getUniformLocation(this.programId, name), count, values);
+    this.setFloat3 = function(name, values) {
+        gl.uniform3fv(gl.getUniformLocation(this.programId, name), values);
     }
 }
 

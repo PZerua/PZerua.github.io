@@ -88,6 +88,9 @@ class FrameBuffer {
         context.putImageData(imageData, 0, 0);
 
         var img = new Image();
+        img.onload = function () {
+          Editor.graphCanvas.draw(true, true);
+        };
         img.src = canvas.toDataURL();
         return img;
     }

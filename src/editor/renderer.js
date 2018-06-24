@@ -63,6 +63,13 @@ function Renderer(canvas) {
 	Shader.registerShader("common", "invertFilter");
 	Shader.registerShader("common", "xJoinFilter");
 	Shader.registerShader("common", "yJoinFilter");
+	Shader.registerShader("common", "minFilter");
+	Shader.registerShader("common", "maxFilter");
+	Shader.registerShader("common", "sumFilter");
+	Shader.registerShader("common", "subFilter");
+	Shader.registerShader("common", "lerpMaskFilter");
+	Shader.registerShader("common", "heightColor");
+	Shader.registerShader("common", "slopeColor");
 	Shader.precompileShaders(precompileShadersCallback);
 
 }

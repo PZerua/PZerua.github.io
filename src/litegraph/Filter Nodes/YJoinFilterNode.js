@@ -7,6 +7,7 @@ function YJoinFilterNode() {
     this.addInput("Threshold");
     this.addOutput("Heightmap");
 
+    this.size[1] += 128.0;
 }
 
 //name to show
@@ -60,7 +61,26 @@ YJoinFilterNode.prototype.onExecute = function() {
         self.fboFilter.shader.setFloat("u_threshold", threshold);
     }
 
-    // --- Create normal map and save it in the provided texture ---
+    var setFilterColorUniformsCallback = function() {
+        self.fboFilter.shader.setInt("u_heightmapTexture0", 0);
+        gl.activeTexture(gl.TEXTURE0);
+        if (self.heightmapOBJ_0.colorTexture === undefined) {
+            self.heightmapOBJ_0.heightmapTexture.bind();
+        } else {
+            self.heightmapOBJ_0.colorTexture.bind();
+        }
+
+        self.fboFilter.shader.setInt("u_heightmapTexture1", 1);
+        gl.activeTexture(gl.TEXTURE1);
+        if (self.heightmapOBJ_1.colorTexture === undefined) {
+            self.heightmapOBJ_1.heightmapTexture.bind();
+        } else {
+            self.heightmapOBJ_1.colorTexture.bind();
+        }
+
+        self.fboFilter.shader.setFloat("u_threshold", threshold);
+    }
+
     // Create texture to be filled by the framebuffer
     var filterTexture = new Texture(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null);
     // Create framebuffer providing the texture and a custom shader
@@ -68,9 +88,31 @@ YJoinFilterNode.prototype.onExecute = function() {
 
     this.fboFilter.render();
 
+    // Create texture to be filled by the framebuffer
+    var filterTextureColor = new Texture(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    // Create framebuffer providing the texture and a custom shader
+    this.fboFilterColor = new FrameBuffer(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, filterTextureColor, "yJoinFilter", setFilterColorUniformsCallback);
+
+    this.fboFilterColor.render();
+
     this.heightmapOBJ_0.heightmapTexture = filterTexture;
+    this.heightmapOBJ_0.colorTexture = filterTextureColor;
+
+    // To display heightmap texture in node
+    this.img = this.fboFilter.toImage();
 
     this.setOutputData(0, this.heightmapOBJ_0);
+}
+
+YJoinFilterNode.prototype.onDrawBackground = function(ctx)
+{
+    var height = this.inputs.length * 15 + 5
+    ctx.fillStyle = "rgb(30,30,30)";
+    ctx.fillRect(0, height, this.size[0] + 1, this.size[1] - height);
+
+    if(this.img) {
+        ctx.drawImage(this.img, (this.size[0] - 128) / 2.0, height, 128, this.size[1] - height);
+    }
 }
 
 //register in the system

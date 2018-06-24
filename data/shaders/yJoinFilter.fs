@@ -18,9 +18,9 @@ float map(float value, float inMin, float inMax, float outMin, float outMax) {
 
 void main (void)
 {
-    float f0 = texture(u_heightmapTexture0, oUvs).r;
-    float f1 = texture(u_heightmapTexture1, oUvs).r;
-    float f = 0.0;
+    vec3 f0 = texture(u_heightmapTexture0, oUvs).rgb;
+    vec3 f1 = texture(u_heightmapTexture1, oUvs).rgb;
+    vec3 f = vec3(0.0);
 
     if (oUvs.y < u_offset - u_threshold / 2.0) {
         f = f0;
@@ -32,5 +32,5 @@ void main (void)
         f = f1;
     }
 
-    fragColor = vec4(vec3(f), 1.0);
+    fragColor = vec4(f, 1.0);
 }

@@ -6,6 +6,7 @@ function ClampFilterNode() {
     this.addInput("To");
     this.addOutput("Heightmap");
 
+    this.size[1] += 128.0;
 }
 
 //name to show
@@ -43,7 +44,6 @@ ClampFilterNode.prototype.onExecute = function() {
         self.fboFilter.shader.setFloat("u_to", to);
     }
 
-    // --- Create normal map and save it in the provided texture ---
     // Create texture to be filled by the framebuffer
     var filterTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null);
     // Create framebuffer providing the texture and a custom shader
@@ -53,7 +53,21 @@ ClampFilterNode.prototype.onExecute = function() {
 
     this.heighmapOBJ.heightmapTexture = filterTexture;
 
+    // To display heightmap texture in node
+    this.img = this.fboFilter.toImage();
+
     this.setOutputData(0, this.heighmapOBJ);
+}
+
+ClampFilterNode.prototype.onDrawBackground = function(ctx)
+{
+    var height = this.inputs.length * 15 + 5
+    ctx.fillStyle = "rgb(30,30,30)";
+    ctx.fillRect(0, height, this.size[0] + 1, this.size[1] - height);
+
+    if(this.img) {
+        ctx.drawImage(this.img, (this.size[0] - 128) / 2.0, height, 128, this.size[1] - height);
+    }
 }
 
 //register in the system

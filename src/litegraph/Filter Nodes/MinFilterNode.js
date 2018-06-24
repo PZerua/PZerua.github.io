@@ -1,20 +1,18 @@
 //node constructor class
-function XJoinFilterNode() {
+function MinFilterNode() {
 
     this.addInput("Heightmap0");
     this.addInput("Heightmap1");
-    this.addInput("Offset");
-    this.addInput("Threshold");
     this.addOutput("Heightmap");
 
     this.size[1] += 128.0;
 }
 
 //name to show
-XJoinFilterNode.title = "X Join Filter";
+MinFilterNode.title = "Min Filter";
 
 //function to call when the node is executed
-XJoinFilterNode.prototype.onExecute = function() {
+MinFilterNode.prototype.onExecute = function() {
 
     // Receive heightmap Obj and copy its contents (I don't want to modify it being a reference, bad things can happen)
     var heightmapOBJ_0 = this.getInputData(0);
@@ -37,14 +35,6 @@ XJoinFilterNode.prototype.onExecute = function() {
         return;
     }
 
-    var offset = this.getInputData(2);
-    if (offset === undefined)
-        offset = 0.5
-
-    var threshold = this.getInputData(3);
-    if (threshold === undefined)
-        threshold = 0.2;
-
     var self = this;
     var setFilterUniformsCallback = function() {
         self.fboFilter.shader.setInt("u_heightmapTexture0", 0);
@@ -54,9 +44,6 @@ XJoinFilterNode.prototype.onExecute = function() {
         self.fboFilter.shader.setInt("u_heightmapTexture1", 1);
         gl.activeTexture(gl.TEXTURE1);
         self.heightmapOBJ_1.heightmapTexture.bind();
-
-        self.fboFilter.shader.setFloat("u_offset", offset);
-        self.fboFilter.shader.setFloat("u_threshold", threshold);
     }
 
     var setFilterColorUniformsCallback = function() {
@@ -75,21 +62,19 @@ XJoinFilterNode.prototype.onExecute = function() {
         } else {
             self.heightmapOBJ_1.colorTexture.bind();
         }
-
-        self.fboFilter.shader.setFloat("u_threshold", threshold);
     }
 
     // Create texture to be filled by the framebuffer
     var filterTexture = new Texture(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null);
     // Create framebuffer providing the texture and a custom shader
-    this.fboFilter = new FrameBuffer(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, filterTexture, "xJoinFilter", setFilterUniformsCallback);
+    this.fboFilter = new FrameBuffer(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, filterTexture, "minFilter", setFilterUniformsCallback);
 
     this.fboFilter.render();
 
     // Create texture to be filled by the framebuffer
     var filterTextureColor = new Texture(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null);
     // Create framebuffer providing the texture and a custom shader
-    this.fboFilterColor = new FrameBuffer(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, filterTextureColor, "xJoinFilter", setFilterColorUniformsCallback);
+    this.fboFilterColor = new FrameBuffer(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, filterTextureColor, "minFilter", setFilterColorUniformsCallback);
 
     this.fboFilterColor.render();
 
@@ -102,7 +87,7 @@ XJoinFilterNode.prototype.onExecute = function() {
     this.setOutputData(0, this.heightmapOBJ_0);
 }
 
-XJoinFilterNode.prototype.onDrawBackground = function(ctx)
+MinFilterNode.prototype.onDrawBackground = function(ctx)
 {
     var height = this.inputs.length * 15 + 5
     ctx.fillStyle = "rgb(30,30,30)";
@@ -114,4 +99,4 @@ XJoinFilterNode.prototype.onDrawBackground = function(ctx)
 }
 
 //register in the system
-LiteGraph.registerNodeType("heightmap/xJoinFilter", XJoinFilterNode);
+LiteGraph.registerNodeType("heightmap/minFilter", MinFilterNode);

@@ -14,6 +14,8 @@ function CustomHeightmapNode() {
         size: 0,
         heightScale: 0
     }
+
+    this.size[1] += 128.0;
 }
 
 //name to show
@@ -56,7 +58,21 @@ CustomHeightmapNode.prototype.onExecute = function() {
     // Create texture to be filled by the framebuffer
     this.heighmapOBJ.heightmapTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
+    // To display heightmap texture in node
+    this.img = this.fboHeightmap.toImage();
+
     this.setOutputData(0, this.heighmapOBJ);
+}
+
+CustomHeightmapNode.prototype.onDrawBackground = function(ctx)
+{
+    var height = this.inputs.length * 15 + 5
+    ctx.fillStyle = "rgb(30,30,30)";
+    ctx.fillRect(0, height, this.size[0] + 1, this.size[1] - height);
+
+    if(this.img) {
+        ctx.drawImage(this.img, (this.size[0] - 128) / 2.0, height, 128, this.size[1] - height);
+    }
 }
 
 //register in the system

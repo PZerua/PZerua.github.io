@@ -19,6 +19,8 @@ function CellularNoiseNode() {
         size: 0,
         heightScale: 0
     }
+
+    this.size[1] += 128.0;
 }
 
 //name to show
@@ -86,7 +88,21 @@ CellularNoiseNode.prototype.onExecute = function() {
 
     this.fboHeightmap.render();
 
+    // To display heightmap texture in node
+    this.img = this.fboHeightmap.toImage();
+
     this.setOutputData(0, this.heighmapOBJ);
+}
+
+CellularNoiseNode.prototype.onDrawBackground = function(ctx)
+{
+    var height = this.inputs.length * 15 + 5
+    ctx.fillStyle = "rgb(30,30,30)";
+    ctx.fillRect(0, height, this.size[0] + 1, this.size[1] - height);
+
+    if(this.img) {
+        ctx.drawImage(this.img, (this.size[0] - 128) / 2.0, height, 128, this.size[1] - height);
+    }
 }
 
 //register in the system
