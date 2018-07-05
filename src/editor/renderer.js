@@ -31,6 +31,8 @@ function Renderer(canvas) {
 		// Size more than 256 exceeds the max index value: 2^16
 		this.terrain = new Terrain(2);
 
+		this.skybox = new Cubemap("miramar")
+
 		Editor.centerCamera();
 		self.shadersReady = true;
 	}
@@ -48,6 +50,7 @@ function Renderer(canvas) {
 
 	Shader.registerShader("terrain", "terrain");
 	Shader.registerShader("axes", "axes");
+	Shader.registerShader("skybox", "skybox");
 	Shader.registerShader("common", "perlinNoise");
 	Shader.registerShader("common", "valueNoise");
 	Shader.registerShader("common", "cellularNoise");
@@ -85,6 +88,10 @@ Renderer.prototype.render = function(camera) {
 
 	this.axes.render(camera);
 	this.terrain.render(camera);
+
+	gl.depthFunc(gl.LEQUAL);
+	this.skybox.render(camera);
+	gl.depthFunc(gl.LESS);
 }
 
 Renderer.prototype.buildTerrain = function() {

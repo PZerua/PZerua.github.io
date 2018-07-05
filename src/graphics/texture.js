@@ -1,12 +1,13 @@
 class Texture {
 
-    constructor(width, height, internalFormat, format, type, data) {
+    constructor(width, height, internalFormat, format, type, data, hash) {
 
         this.width = width;
         this.height = height;
         this.internalFormat = internalFormat;
         this.format = format;
         this.type = type;
+        this.hash = hash ? hash : "";
 
         this.textureId = gl.createTexture();
         this.bind();

@@ -14,6 +14,29 @@ MinFilterNode.title = "Min Filter";
 //function to call when the node is executed
 MinFilterNode.prototype.onExecute = function() {
 
+    var inputsValues = [];
+    for (var i = 0; i < this.inputs.length; i++) {
+        var input = this.getInputData(i);
+
+        if (input === undefined) {
+            inputsValues[i] = 0;
+        } else
+        if (typeof input !== "number") {
+            inputsValues[i] = input.heightmapTexture.hash + (input.colorTexture ? input.colorTexture.hash : "");
+        } else {
+            inputsValues[i] = input;
+        }
+    }
+
+    var hash = Math.createHash(inputsValues);
+
+    if (this.hash && this.hash == hash) {
+        this.setOutputData(0, this.heighmapOBJ);
+        return;
+    } else {
+        this.hash = hash;
+    }
+
     // Receive heightmap Obj and copy its contents (I don't want to modify it being a reference, bad things can happen)
     var heightmapOBJ_0 = this.getInputData(0);
     if (heightmapOBJ_0 === undefined) {

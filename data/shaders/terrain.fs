@@ -23,7 +23,6 @@ float edgeFactor()
 
 void main (void)
 {
-    vec3 light = vec3(512, 512, 512);
     vec3 diffuse;
 	vec3 specular = vec3(0.0);
 	vec3 ambient = vec3(0.1, 0.1, 0.15);
@@ -33,7 +32,7 @@ void main (void)
     vec4 normalsTex = texture(u_normalsTexture, oUvs);
 
     vec3 N = normalsTex.rgb;
-    vec3 L = normalize(light - oVertex);
+    vec3 L = normalize(vec3(0.5, 0.2, 0.5));
 
     diffuse = clamp( colorTex.rgb * max(dot(N,L), 0.0), 0.0, 1.0 );
 

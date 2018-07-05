@@ -5,6 +5,8 @@ function Shader(vertexName, fragmentName, shaderCallback) {
     this.vertexName = vertexName;
     this.fragmentName = fragmentName;
 
+    this.uniformIds = {}
+
     var numCompleted = 0;
     var result = [];
 
@@ -84,23 +86,38 @@ function Shader(vertexName, fragmentName, shaderCallback) {
     }
 
     this.setMatrix4 = function(name, matrix) {
-        gl.uniformMatrix4fv(gl.getUniformLocation(this.programId, name), false, matrix.m);
+        if (!this.uniformIds[name]) {
+            this.uniformIds[name] = gl.getUniformLocation(this.programId, name);
+        }
+        gl.uniformMatrix4fv(this.uniformIds[name], false, matrix.m);
     }
 
     this.setVec3 = function(name, vector) {
-        gl.uniform3f(gl.getUniformLocation(this.programId, name), vector.x, vector.y, vector.z);
+        if (!this.uniformIds[name]) {
+            this.uniformIds[name] = gl.getUniformLocation(this.programId, name);
+        }
+        gl.uniform3f(this.uniformIds[name], vector.x, vector.y, vector.z);
     }
 
     this.setInt = function(name, value) {
-        gl.uniform1i(gl.getUniformLocation(this.programId, name), value);
+        if (!this.uniformIds[name]) {
+            this.uniformIds[name] = gl.getUniformLocation(this.programId, name);
+        }
+        gl.uniform1i(this.uniformIds[name], value);
     }
 
     this.setFloat = function(name, value) {
-        gl.uniform1f(gl.getUniformLocation(this.programId, name), value);
+        if (!this.uniformIds[name]) {
+            this.uniformIds[name] = gl.getUniformLocation(this.programId, name);
+        }
+        gl.uniform1f(this.uniformIds[name], value);
     }
 
     this.setFloat3 = function(name, values) {
-        gl.uniform3fv(gl.getUniformLocation(this.programId, name), values);
+        if (!this.uniformIds[name]) {
+            this.uniformIds[name] = gl.getUniformLocation(this.programId, name);
+        }
+        gl.uniform3fv(this.uniformIds[name], values);
     }
 }
 

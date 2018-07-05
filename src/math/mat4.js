@@ -21,7 +21,8 @@ class mat4 {
     }
 
     clone() {
-        return new mat4().fromArray(this.m);
+        var matClone = new mat4()
+        return matClone.fromArray(this.m);
     }
 
     add(mat) {
@@ -58,12 +59,29 @@ class mat4 {
         for (var i = 0; i < 16; i++) {
             this.m[i] = array[i];
         }
+        return this;
     }
 
     setTranslation(x, y, z) {
         this.m[0 + 3 * 4] = x;
         this.m[1 + 3 * 4] = y;
         this.m[2 + 3 * 4] = z;
+    }
+
+    clearTranslation() {
+        var mat = this.clone();
+
+        mat.m[0 + 3 * 4] = 0.0;
+        mat.m[1 + 3 * 4] = 0.0;
+        mat.m[2 + 3 * 4] = 0.0;
+
+        // mat.m[3 + 0 * 4] = 0.0;
+        // mat.m[3 + 1 * 4] = 0.0;
+        // mat.m[3 + 2 * 4] = 0.0;
+
+        mat.m[3 + 3 * 4] = 1.0;
+
+        return mat;
     }
 
     setRotation(angle, x, y, z) {

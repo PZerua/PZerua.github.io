@@ -46,6 +46,16 @@ CustomHeightmapNode.prototype.onExecute = function() {
     if (this.heighmapOBJ.heightScale === undefined)
         this.heighmapOBJ.heightScale = 200;
 
+    var hash = Math.createHash([this.heighmapOBJ.size, this.heighmapOBJ.heightScale]);
+    hash += image.src;
+
+    if (this.hash && this.hash == hash) {
+        this.setOutputData(0, this.heighmapOBJ);
+        return;
+    } else {
+        this.hash = hash;
+    }
+
     // Define custom uniforms for the framebuffer's shader
     var self = this;
     var setHeightmapUniformsCallback = function() {
@@ -56,7 +66,7 @@ CustomHeightmapNode.prototype.onExecute = function() {
 
     // --- Create heightmap and save it in the provided texture ---
     // Create texture to be filled by the framebuffer
-    this.heighmapOBJ.heightmapTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+    this.heighmapOBJ.heightmapTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image, this.hash);
 
     // To display heightmap texture in node
     this.img = this.fboHeightmap.toImage();

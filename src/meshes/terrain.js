@@ -134,14 +134,14 @@ function Terrain(scale) {
         // VertexBuffer to store uvs
         self.vboUvs = new VertexBuffer(self.uvs, gl.STATIC_DRAW);
 
-        // The attribute position in the shader
+        // The attribute uvs in the shader
         gl.enableVertexAttribArray(1);
         gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 0, 0);
 
         // VertexBuffer to store barycentric positions (for wireframe rendering)
         self.vboBarycentric = new VertexBuffer(self.barycentricBuffer, gl.STATIC_DRAW);
 
-        // The attribute position in the shader
+        // The attribute barypoints in the shader
         gl.enableVertexAttribArray(2);
         gl.vertexAttribPointer(2, 3, gl.FLOAT, false, 0, 0);
 

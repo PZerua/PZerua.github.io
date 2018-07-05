@@ -5,7 +5,7 @@ function SlopeColorNode() {
     this.addInput("Color 0.25","hcolor");
     this.addInput("Color 0.50","hcolor");
     this.addInput("Color 0.75","hcolor");
-    this.addInput("Color 0.10","hcolor");
+    this.addInput("Color 1.00","hcolor");
     this.addInput("Dispersion","number");
     this.addOutput("Heightmap");
 
@@ -17,6 +17,29 @@ SlopeColorNode.title = "Slope Color";
 
 //function to call when the node is executed
 SlopeColorNode.prototype.onExecute = function() {
+
+    var inputsValues = [];
+    for (var i = 0; i < this.inputs.length; i++) {
+        var input = this.getInputData(i);
+
+        if (input === undefined) {
+            inputsValues[i] = 0;
+        } else
+        if (typeof input !== "number") {
+            inputsValues[i] = input.heightmapTexture.hash + (input.colorTexture ? input.colorTexture.hash : "");
+        } else {
+            inputsValues[i] = input;
+        }
+    }
+
+    var hash = Math.createHash(inputsValues);
+
+    if (this.hash && this.hash == hash) {
+        this.setOutputData(0, this.heighmapOBJ);
+        return;
+    } else {
+        this.hash = hash;
+    }
 
     // Receive heightmap Obj and copy its contents (I don't want to modify it being a reference, bad things can happen)
     var heightmapOBJ = this.getInputData(0);
@@ -68,7 +91,7 @@ SlopeColorNode.prototype.onExecute = function() {
 
     // --- Create normal map and save it in the provided texture ---
     // Create texture to be filled by the framebuffer
-    this.heighmapOBJ.colorTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    this.heighmapOBJ.colorTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null, this.hash);
     // Create framebuffer providing the texture and a custom shader
     this.fboColor = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.heighmapOBJ.colorTexture, "slopeColor", setFilterUniformsCallback);
 
