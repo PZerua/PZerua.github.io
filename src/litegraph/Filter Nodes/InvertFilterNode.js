@@ -60,8 +60,11 @@ InvertFilterNode.prototype.onExecute = function() {
 
     this.heighmapOBJ.heightmapTexture = filterTexture;
 
-    // To display heightmap texture in node
-    this.img = this.fboFilter.toImage();
+    // Only generate preview when fast edit is disabled
+    if (!Editor.fastEditMode) {
+        // To display heightmap texture in node
+        this.img = this.fboFilter.toImage();
+    }
 
     this.setOutputData(0, this.heighmapOBJ);
 }
@@ -72,7 +75,7 @@ InvertFilterNode.prototype.onDrawBackground = function(ctx)
     ctx.fillStyle = "rgb(30,30,30)";
     ctx.fillRect(0, height, this.size[0] + 1, this.size[1] - height);
 
-    if(this.img) {
+    if(this.img && !Editor.fastEditMode) {
         ctx.drawImage(this.img, (this.size[0] - 128) / 2.0, height, 128, this.size[1] - height);
     }
 }

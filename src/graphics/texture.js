@@ -21,9 +21,18 @@ class Texture {
         this.unbind();
     }
 
-    updateTexture(data) {
+    updateTexture(data, hash) {
+        this.hash = hash ? hash : "";
         gl.bindTexture(gl.TEXTURE_2D, this.textureId);
         gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, this.width, this.height, this.format, this.type, data);
+    }
+
+    setHash(hash) {
+        this.hash = hash ? hash : "";
+    }
+
+    delete() {
+        gl.deleteTexture(this.textureId);
     }
 
     bind() {

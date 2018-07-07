@@ -23,12 +23,17 @@ SlopeColorNode.prototype.onExecute = function() {
         var input = this.getInputData(i);
 
         if (input === undefined) {
-            inputsValues[i] = 0;
+            inputsValues.push(0);
         } else
-        if (typeof input !== "number") {
-            inputsValues[i] = input.heightmapTexture.hash + (input.colorTexture ? input.colorTexture.hash : "");
+        if (input.constructor === Object) {
+            inputsValues.push((input.heightmapTexture ? input.heightmapTexture.hash : "") + (input.colorTexture ? input.colorTexture.hash : ""));
+        } else
+        if (input.constructor === Array) {
+            for (var j = 0; j < input.length; j++) {
+                inputsValues.push(input[j]);
+            }
         } else {
-            inputsValues[i] = input;
+            inputsValues.push(input);
         }
     }
 
@@ -97,8 +102,11 @@ SlopeColorNode.prototype.onExecute = function() {
 
     this.fboColor.render();
 
-    // To display heightmap texture in node
-    this.img = this.fboColor.toImage();
+    // Only generate preview when fast edit is disabled
+    if (!Editor.fastEditMode) {
+        // To display heightmap texture in node
+        this.img = this.fboColor.toImage();
+    }
 
     this.setOutputData(0, this.heighmapOBJ);
 }
@@ -109,7 +117,7 @@ SlopeColorNode.prototype.onDrawBackground = function(ctx)
     ctx.fillStyle = "rgb(30,30,30)";
     ctx.fillRect(0, height, this.size[0] + 1, this.size[1] - height);
 
-    if(this.img) {
+    if(this.img && !Editor.fastEditMode) {
         ctx.drawImage(this.img, (this.size[0] - 128) / 2.0, height, 128, this.size[1] - height);
     }
 }

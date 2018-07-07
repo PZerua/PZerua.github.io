@@ -43,6 +43,9 @@ CellularNoiseNode.prototype.onExecute = function() {
         }
     }
 
+    // Force to reevaluate when changing between modes
+    inputsValues.push(Editor.fastEditMode ? 1 : 0);
+
     var hash = Math.createHash(inputsValues);
 
     if (this.hash && this.hash == hash) {
@@ -103,16 +106,22 @@ CellularNoiseNode.prototype.onExecute = function() {
         self.fboHeightmap.shader.setFloat("u_yOffset", yOffset);
     }
 
-    // --- Create heightmap and save it in the provided texture ---
-    // Create texture to be filled by the framebuffer
-    this.heighmapOBJ.heightmapTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null, this.hash);
-    // Create framebuffer providing the texture and a custom shader
-    this.fboHeightmap = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.heighmapOBJ.heightmapTexture, "cellularNoise", setHeightmapUniformsCallback);
+    if (!this.heighmapOBJ.heightmapTexture) {
+        // --- Create heightmap and save it in the provided texture ---
+        // Create texture to be filled by the framebuffer
+        this.heighmapOBJ.heightmapTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null, this.hash);
+        // Create framebuffer providing the texture and a custom shader
+        this.fboHeightmap = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.heighmapOBJ.heightmapTexture, "cellularNoise", setHeightmapUniformsCallback);
+    } else {
+        this.heighmapOBJ.heightmapTexture.setHash(this.hash);
+    }
 
     this.fboHeightmap.render();
 
-    // To display heightmap texture in node
-    this.img = this.fboHeightmap.toImage();
+    if (!Editor.fastEditMode) {
+        // To display heightmap texture in node
+        this.img = this.fboHeightmap.toImage();
+    }
 
     this.setOutputData(0, this.heighmapOBJ);
 }
@@ -123,7 +132,7 @@ CellularNoiseNode.prototype.onDrawBackground = function(ctx)
     ctx.fillStyle = "rgb(30,30,30)";
     ctx.fillRect(0, height, this.size[0] + 1, this.size[1] - height);
 
-    if(this.img) {
+    if(this.img && !Editor.fastEditMode) {
         ctx.drawImage(this.img, (this.size[0] - 128) / 2.0, height, 128, this.size[1] - height);
     }
 }
