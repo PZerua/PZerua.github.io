@@ -3,6 +3,7 @@
 <head>
     <link rel="stylesheet" href="style/style.css">
     <link rel="stylesheet" href="style/litegraph.css">
+    <link rel="stylesheet" href="style/litegraph-editor.css">
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <meta charset="UTF-8">
@@ -10,19 +11,24 @@
 </head>
 
 <body onload="Editor.init()">
-    <div id="main">
+    <div id="main" class="litegraph-editor">
         <div id="toolBar">
-            <button id="runStepButton" class="button">Run Step</button>
-            <button id="wireframeButton" class="button">Wireframe: OFF</button>
+            <button id="calculateButton" class="button">Calculate</button>
             <button id="centerCameraButton" class="button">Center Camera</button>
-            <button id="fastEditButton" class="button">Fast Edit Mode: OFF</button>
+            <button id="wireframeButton" class="button">Wireframe: OFF</button>
+            <div class="text">Terrain size: </div><input id="terrainSize" class="input" type="number" name="size" value="1024">
+            <input id="submitTerrainSize" type="submit" value="Apply" class="button">
+            <div id="sampleWorkflows" class="text">Sample workflows: </div>
+            <select id="selector">
+                <option>Empty</option>
+            </select>
             <button id="saveButton" class="button">Save</button>
             <button id="loadButton" onclick="document.getElementById('loadFile').click();" class="button">Load</button>
             <input id="loadFile" type="file" accept=".json" style="display: none;" />
 
         </div>
         <div id="container">
-            <canvas id="graphCanvas"></canvas>
+            <canvas id="graphCanvas" class="graphcanvas"></canvas>
             <canvas id="glCanvas"></canvas>
             <div id="textureContainer">
                 <img id="heightmapTex"></img>
@@ -39,6 +45,9 @@
         console.error("There is no support for WebGL2");
     }
     else {
+        gl.getExtension('OES_texture_float');
+        gl.getExtension('OES_texture_float_linear');
+        gl.getExtension('EXT_color_buffer_float');
         console.log("WebGL2 context loaded");
     }
 

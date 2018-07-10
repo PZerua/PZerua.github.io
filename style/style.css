@@ -6,25 +6,58 @@ html, body {
     overflow: hidden;
 }
 
-#saveButton {
-    margin-left: auto
-}
-
 .button {
-    background-color: #008c9e;
     border: none;
-    color: black;
-    width: 145px;
-    height: 38px;
-    margin: 4px;
+    color: #CCC;
+    max-width: 165px;
+    height: 34px;
+    margin: 2px;
     text-align: center;
-    font-weight: bold;
-    font-size: 16px;
+    font-size: 20px;
     cursor: pointer;
+
+    border: 0 solid #666;
+    background-color: #3F3F3F;
+    padding: 4px 10px;
+    -webkit-transition: all 0.4s;
 }
 
+input[type='number'] {
+    -moz-appearance:textfield;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+}
 .button:hover {
-    background-color: #05a6bb;
+    background-color: #999;
+    color: #FFF;
+    transition: all 1s;
+    -moz-transition: all 1s;
+    -webkit-transition: all 0.4s;
+}
+
+.input {
+    height: 34px;
+    text-align: center;
+    font-size: 20px;
+    width: 80px;
+    color: white;
+    background-color: black;
+    border: 0;
+}
+
+.input:focus {
+    outline: none !important;
+    border: 1px solid #3F3F3F;
+}
+
+.text {
+    color: #CCC;
+    font-size: 20px;
+    margin-left: 20px;
+    margin-right: 5px;
 }
 
 #main {
@@ -37,7 +70,7 @@ html, body {
 
 #toolBar {
     position: relative;
-    height: 50px;
+    height: 42px;
     width: 100%;
     box-sizing: border-box;
     display: flex;
@@ -49,10 +82,6 @@ html, body {
     position: relative;
     height: calc(100% - 50px);
     width: 100%;
-}
-
-#graphCanvas {
-    box-sizing: border-box;
 }
 
 #glCanvas {
@@ -73,6 +102,21 @@ html, body {
     height: 150px;
     width: 450px;
     display: flex;
+}
+
+#selector {
+    color: white;
+    background-color: black;
+    border: 0;
+    height: 34px;
+    text-align: center;
+    font-size: 20px;
+    width: 160px;
+    margin-right: 2px;
+}
+
+#saveButton {
+    margin-left: auto
 }
 
 #heightmapTex {

@@ -2,7 +2,10 @@
 function InvertFilterNode() {
 
     this.addInput("Heightmap");
+
     this.addOutput("Heightmap");
+
+    this.properties = {radius:1.0};
 
     this.size[1] += 128.0;
 }
@@ -10,9 +13,7 @@ function InvertFilterNode() {
 //name to show
 InvertFilterNode.title = "Invert Filter";
 
-//function to call when the node is executed
-InvertFilterNode.prototype.onExecute = function() {
-
+InvertFilterNode.prototype.evaluateHash = function() {
     var inputsValues = [];
     for (var i = 0; i < this.inputs.length; i++) {
         var input = this.getInputData(i);
@@ -27,46 +28,91 @@ InvertFilterNode.prototype.onExecute = function() {
         }
     }
 
+    // Detect terrain size changes
+    inputsValues.push(Editor.terrainSize);
+
     var hash = Math.createHash(inputsValues);
 
     if (this.hash && this.hash == hash) {
-        this.setOutputData(0, this.heighmapOBJ);
-        return;
+        return false;
     } else {
         this.hash = hash;
+        return true;
     }
+}
 
+InvertFilterNode.prototype.onConnectionsChange = function() {
+    if (this.heightmapOBJ) {
+        this.setOutputData(0, this.heightmapOBJ);
+    }
+}
+
+InvertFilterNode.prototype.checkProperties = function() {
     // Receive heightmap Obj and copy its contents (I don't want to modify it being a reference, bad things can happen)
     var heightmapOBJ = this.getInputData(0);
     if (heightmapOBJ === undefined) {
-        return
+        return false;
     } else {
-        this.heighmapOBJ = Object.assign({}, heightmapOBJ);
+        this.heightmapOBJ = Object.assign({}, heightmapOBJ);
+    }
+
+    // Receive size
+    this.heightmapOBJ.size = Editor.terrainSize;
+
+    return true;
+}
+
+//function to call when the node is executed
+InvertFilterNode.prototype.onExecute = function() {
+
+    if(!this.checkProperties()) {
+        this.setOutputData(0, this.lastOBJ);
+        return;
+    }
+    var hashChanged = this.evaluateHash()
+
+    if (hashChanged) {
+        Editor.setCalculateColor("#a0711a");
+    }
+
+    if (!Editor.calculatingImages && !hashChanged) {
+        this.setOutputData(0, this.lastOBJ);
+        return;
     }
 
     var self = this;
     var setFilterUniformsCallback = function() {
         self.fboFilter.shader.setInt("u_heightmapTexture", 0);
         gl.activeTexture(gl.TEXTURE0);
-        self.heighmapOBJ.heightmapTexture.bind();
+        self.heightmapOBJ.heightmapTexture.bind();
+
+        self.fboFilter.shader.setFloat("u_size", self.heightmapOBJ.size);
+        self.fboFilter.shader.setFloat("u_radius", self.properties.radius);
     }
 
-    // Create texture to be filled by the framebuffer
-    var filterTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null, this.hash);
-    // Create framebuffer providing the texture and a custom shader
-    this.fboFilter = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, filterTexture, "invertFilter", setFilterUniformsCallback);
+    if (!this.filterTexture) {
+        // Create texture to be filled by the framebuffer
+        this.filterTexture = new Texture(this.heightmapOBJ.size, this.heightmapOBJ.size, gl.RGBA32F, gl.RGBA, gl.FLOAT, null, this.hash);
+        // Create framebuffer providing the texture and a custom shader
+        this.fboFilter = new FrameBuffer(this.heightmapOBJ.size, this.heightmapOBJ.size, this.filterTexture, "invertFilter", setFilterUniformsCallback);
+    } else {
+        this.filterTexture.setHash(this.hash);
+    }
 
+    this.fboFilter.setUniformsCallback(setFilterUniformsCallback)
     this.fboFilter.render();
 
-    this.heighmapOBJ.heightmapTexture = filterTexture;
+    //this.heighmapOBJ.heightmapTexture.delete();
+    this.heightmapOBJ.heightmapTexture = this.filterTexture;
 
     // Only generate preview when fast edit is disabled
-    if (!Editor.fastEditMode) {
+    if (Editor.calculatingImages) {
         // To display heightmap texture in node
         this.img = this.fboFilter.toImage();
     }
 
-    this.setOutputData(0, this.heighmapOBJ);
+    this.lastOBJ = Object.assign({}, this.heightmapOBJ);
+    this.setOutputData(0, this.heightmapOBJ);
 }
 
 InvertFilterNode.prototype.onDrawBackground = function(ctx)

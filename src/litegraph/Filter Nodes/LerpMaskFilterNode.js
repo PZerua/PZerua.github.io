@@ -12,9 +12,7 @@ function LerpMaskFilterNode() {
 //name to show
 LerpMaskFilterNode.title = "Lerp Mask Filter";
 
-//function to call when the node is executed
-LerpMaskFilterNode.prototype.onExecute = function() {
-
+LerpMaskFilterNode.prototype.evaluateHash = function() {
     var inputsValues = [];
     for (var i = 0; i < this.inputs.length; i++) {
         var input = this.getInputData(i);
@@ -33,15 +31,24 @@ LerpMaskFilterNode.prototype.onExecute = function() {
 
     if (this.hash && this.hash == hash) {
         this.setOutputData(0, this.heighmapOBJ);
-        return;
+        return false;
     } else {
         this.hash = hash;
+        return true;
     }
+}
 
+LerpMaskFilterNode.prototype.onConnectionsChange = function() {
+    if (this.heightmapOBJ) {
+        this.setOutputData(0, this.heightmapOBJ);
+    }
+}
+
+LerpMaskFilterNode.prototype.checkProperties = function() {
     // Receive heightmap Obj and copy its contents (I don't want to modify it being a reference, bad things can happen)
     var heightmapOBJ_0 = this.getInputData(0);
     if (heightmapOBJ_0 === undefined) {
-        return
+        return false;
     } else {
         this.heightmapOBJ_0 = Object.assign({}, heightmapOBJ_0);
     }
@@ -49,7 +56,7 @@ LerpMaskFilterNode.prototype.onExecute = function() {
     // Receive heightmap Obj and copy its contents (I don't want to modify it being a reference, bad things can happen)
     var heightmapOBJ_1 = this.getInputData(1);
     if (heightmapOBJ_1 === undefined) {
-        return
+        return false;
     } else {
         this.heightmapOBJ_1 = Object.assign({}, heightmapOBJ_1);
     }
@@ -62,10 +69,30 @@ LerpMaskFilterNode.prototype.onExecute = function() {
         this.heightmapOBJ_2 = Object.assign({}, heightmapOBJ_2);
     }
 
-    if (this.heightmapOBJ_0.size !== this.heightmapOBJ_1.size ||
-            this.heightmapOBJ_0.size !== this.heightmapOBJ_2.size ||
-            this.heightmapOBJ_1.size !== this.heightmapOBJ_2.size) {
-        console.error("Size missmatch between heightmaps");
+    // Receive size
+    this.heightmapOBJ_0.size = Editor.terrainSize;
+    this.heightmapOBJ_1.size = Editor.terrainSize;
+    this.heightmapOBJ_2.size = Editor.terrainSize;
+
+    return true;
+}
+
+
+//function to call when the node is executed
+LerpMaskFilterNode.prototype.onExecute = function() {
+
+    if(!this.checkProperties()) {
+        this.setOutputData(0, this.lastOBJ);
+        return;
+    }
+    var hashChanged = this.evaluateHash()
+
+    if (hashChanged) {
+        Editor.setCalculateColor("#a0711a");
+    }
+
+    if (!Editor.calculatingImages && !hashChanged) {
+        this.setOutputData(0, this.lastOBJ);
         return;
     }
 
@@ -106,29 +133,38 @@ LerpMaskFilterNode.prototype.onExecute = function() {
         self.heightmapOBJ_2.heightmapTexture.bind();
     }
 
-    // Create texture to be filled by the framebuffer
-    var filterTexture = new Texture(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null, this.hash);
-    // Create framebuffer providing the texture and a custom shader
-    this.fboFilter = new FrameBuffer(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, filterTexture, "lerpMaskFilter", setFilterUniformsCallback);
+    if (!this.filterTexture) {
+        // Create texture to be filled by the framebuffer
+        this.filterTexture = new Texture(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, gl.RGBA32F, gl.RGBA, gl.FLOAT, null, this.hash);
+        // Create framebuffer providing the texture and a custom shader
+        this.fboFilter = new FrameBuffer(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, this.filterTexture, "maxFilter", setFilterUniformsCallback);
+    } else {
+        this.filterTexture.setHash(this.hash);
+    }
 
+    if (!this.filterTextureColor) {
+        // Create texture to be filled by the framebuffer
+        this.filterTextureColor = new Texture(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, gl.RGBA32F, gl.RGBA, gl.FLOAT, null, this.hash);
+        // Create framebuffer providing the texture and a custom shader
+        this.fboFilterColor = new FrameBuffer(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, this.filterTextureColor, "maxFilter", setFilterColorUniformsCallback);
+    } else {
+        this.filterTextureColor.setHash(this.hash);
+    }
+
+    this.fboFilter.setUniformsCallback(setFilterUniformsCallback)
+    this.fboFilterColor.setUniformsCallback(setFilterColorUniformsCallback)
     this.fboFilter.render();
-
-    // Create texture to be filled by the framebuffer
-    var filterTextureColor = new Texture(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null, this.hash);
-    // Create framebuffer providing the texture and a custom shader
-    this.fboFilterColor = new FrameBuffer(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, filterTextureColor, "lerpMaskFilter", setFilterColorUniformsCallback);
-
     this.fboFilterColor.render();
 
-    this.heightmapOBJ_0.heightmapTexture = filterTexture;
-    this.heightmapOBJ_0.colorTexture = filterTextureColor;
+    this.heightmapOBJ_0.heightmapTexture = this.filterTexture;
+    this.heightmapOBJ_0.colorTexture = this.filterTextureColor;
 
-    // Only generate preview when fast edit is disabled
-    if (!Editor.fastEditMode) {
+    if (Editor.calculatingImages) {
         // To display heightmap texture in node
         this.img = this.fboFilter.toImage();
     }
 
+    this.lastOBJ = Object.assign({}, this.heightmapOBJ_0);
     this.setOutputData(0, this.heightmapOBJ_0);
 }
 

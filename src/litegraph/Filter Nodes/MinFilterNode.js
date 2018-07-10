@@ -11,9 +11,7 @@ function MinFilterNode() {
 //name to show
 MinFilterNode.title = "Min Filter";
 
-//function to call when the node is executed
-MinFilterNode.prototype.onExecute = function() {
-
+MinFilterNode.prototype.evaluateHash = function() {
     var inputsValues = [];
     for (var i = 0; i < this.inputs.length; i++) {
         var input = this.getInputData(i);
@@ -32,15 +30,24 @@ MinFilterNode.prototype.onExecute = function() {
 
     if (this.hash && this.hash == hash) {
         this.setOutputData(0, this.heighmapOBJ);
-        return;
+        return false;
     } else {
         this.hash = hash;
+        return true;
     }
+}
 
+MinFilterNode.prototype.onConnectionsChange = function() {
+    if (this.heightmapOBJ) {
+        this.setOutputData(0, this.heightmapOBJ);
+    }
+}
+
+MinFilterNode.prototype.checkProperties = function() {
     // Receive heightmap Obj and copy its contents (I don't want to modify it being a reference, bad things can happen)
     var heightmapOBJ_0 = this.getInputData(0);
     if (heightmapOBJ_0 === undefined) {
-        return
+        return false;
     } else {
         this.heightmapOBJ_0 = Object.assign({}, heightmapOBJ_0);
     }
@@ -48,13 +55,33 @@ MinFilterNode.prototype.onExecute = function() {
     // Receive heightmap Obj and copy its contents (I don't want to modify it being a reference, bad things can happen)
     var heightmapOBJ_1 = this.getInputData(1);
     if (heightmapOBJ_1 === undefined) {
-        return
+        return false;
     } else {
         this.heightmapOBJ_1 = Object.assign({}, heightmapOBJ_1);
     }
 
-    if (this.heightmapOBJ_0.size !== this.heightmapOBJ_1.size) {
-        console.error("Size missmatch between heightmaps");
+    // Receive size
+    this.heightmapOBJ_0.size = Editor.terrainSize;
+    this.heightmapOBJ_1.size = Editor.terrainSize;
+
+    return true;
+}
+
+//function to call when the node is executed
+MinFilterNode.prototype.onExecute = function() {
+
+    if(!this.checkProperties()) {
+        this.setOutputData(0, this.lastOBJ);
+        return;
+    }
+    var hashChanged = this.evaluateHash()
+
+    if (hashChanged) {
+        Editor.setCalculateColor("#a0711a");
+    }
+
+    if (!Editor.calculatingImages && !hashChanged) {
+        this.setOutputData(0, this.lastOBJ);
         return;
     }
 
@@ -87,29 +114,38 @@ MinFilterNode.prototype.onExecute = function() {
         }
     }
 
-    // Create texture to be filled by the framebuffer
-    var filterTexture = new Texture(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null);
-    // Create framebuffer providing the texture and a custom shader
-    this.fboFilter = new FrameBuffer(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, filterTexture, "minFilter", setFilterUniformsCallback);
+    if (!this.filterTexture) {
+        // Create texture to be filled by the framebuffer
+        this.filterTexture = new Texture(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, gl.RGBA32F, gl.RGBA, gl.FLOAT, null, this.hash);
+        // Create framebuffer providing the texture and a custom shader
+        this.fboFilter = new FrameBuffer(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, this.filterTexture, "minFilter", setFilterUniformsCallback);
+    } else {
+        this.filterTexture.setHash(this.hash);
+    }
 
+    if (!this.filterTextureColor) {
+        // Create texture to be filled by the framebuffer
+        this.filterTextureColor = new Texture(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, gl.RGBA32F, gl.RGBA, gl.FLOAT, null, this.hash);
+        // Create framebuffer providing the texture and a custom shader
+        this.fboFilterColor = new FrameBuffer(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, this.filterTextureColor, "minFilter", setFilterColorUniformsCallback);
+    } else {
+        this.filterTextureColor.setHash(this.hash);
+    }
+
+    this.fboFilter.setUniformsCallback(setFilterUniformsCallback)
+    this.fboFilterColor.setUniformsCallback(setFilterColorUniformsCallback)
     this.fboFilter.render();
-
-    // Create texture to be filled by the framebuffer
-    var filterTextureColor = new Texture(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null);
-    // Create framebuffer providing the texture and a custom shader
-    this.fboFilterColor = new FrameBuffer(this.heightmapOBJ_0.size, this.heightmapOBJ_0.size, filterTextureColor, "minFilter", setFilterColorUniformsCallback);
-
     this.fboFilterColor.render();
 
-    this.heightmapOBJ_0.heightmapTexture = filterTexture;
-    this.heightmapOBJ_0.colorTexture = filterTextureColor;
+    this.heightmapOBJ_0.heightmapTexture = this.filterTexture;
+    this.heightmapOBJ_0.colorTexture = this.filterTextureColor;
 
-    // Only generate preview when fast edit is disabled
-    if (!Editor.fastEditMode) {
+    if (Editor.calculatingImages) {
         // To display heightmap texture in node
         this.img = this.fboFilter.toImage();
     }
 
+    this.lastOBJ = Object.assign({}, this.heightmapOBJ_0);
     this.setOutputData(0, this.heightmapOBJ_0);
 }
 

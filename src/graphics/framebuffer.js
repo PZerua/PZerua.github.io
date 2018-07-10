@@ -81,9 +81,22 @@ class FrameBuffer {
 
         this.bind();
 
+        var tmpTexture = new Texture(this.width, this.height, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        tmpTexture.bind();
+
+        gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, this.width, this.height, 0);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, tmpTexture.textureId, 0);
+
+        gl.readBuffer(gl.COLOR_ATTACHMENT1);
+
         // Read the contents of the framebuffer
-        var pixels = new Uint8Array(this.width * this.height * 4 );
-        gl.readPixels(0, 0, this.width, this.height, this.texture.internalFormat, this.texture.type, pixels);
+        var pixels = new Uint8Array(this.width * this.height * 4);
+        gl.readPixels(0, 0, this.width, this.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+
+        tmpTexture.unbind();
+        tmpTexture.delete();
+
+        gl.readBuffer(gl.COLOR_ATTACHMENT0);
 
         this.unbind();
 

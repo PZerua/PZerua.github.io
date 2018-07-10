@@ -9,13 +9,14 @@ var Editor = {
 	currentKeys: {},
 	stats: new Stats(),
 	graph : new LGraph(),
-	fastEditMode: false,
+	terrainSize: 1024,
+	calculatingImages: true,
 	init : function() {
 
-		var container = document.getElementById("container")
-		this.stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
-		this.stats.dom.style.position = "absolute";
-		container.appendChild( this.stats.dom );
+		// var container = document.getElementById("container")
+		// this.stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+		// this.stats.dom.style.position = "absolute";
+		// container.appendChild( this.stats.dom );
 
 		this.graphCanvas = new LGraphCanvas("#graphCanvas", this.graph);
 		this.graphCanvas.resize();
@@ -23,7 +24,7 @@ var Editor = {
 		window.addEventListener("resize", function() { Editor.graphCanvas.resize(); } );
 
 		// Setup litegraph default nodes
-		this.graph.load("data/SampleWorkflow.json");
+		//this.graph.load("data/SampleWorkflow.json");
 
 		// Setup renderer and camera
 		this.renderer = new Renderer(this.glCanvas);
@@ -42,10 +43,13 @@ var Editor = {
 			}
 		};
 
-		this.runStepButton = document.getElementById("runStepButton")
-		this.runStepButton.onclick = function() {
+		this.calculateButton = document.getElementById("calculateButton")
+		this.calculateButton.onclick = function() {
+			self.calculatingImages = true;
 			self.graph.runStep();
-			self.renderer.buildTerrain();
+			Editor.calculatingImages = false;
+			Editor.setCalculateColor("#3F3F3F");
+			//self.renderer.buildTerrain();
 		};
 
 		var centerCameraButton = document.getElementById("centerCameraButton")
@@ -53,47 +57,122 @@ var Editor = {
 			self.centerCamera()
 		};
 
-		this.fastEditButton = document.getElementById("fastEditButton")
-		this.fastEditButton.onclick = function() {
-			if (Editor.fastEditMode) {
-				Editor.fastEditMode = false;
-				Editor.graph.stop();
-				Editor.graph.runStep();
-				self.fastEditButton.textContent  = "Fast Edit Mode: OFF";
-
-				// Display textures
-				document.getElementById("heightmapTex").style.display = 'block';
-				document.getElementById("normalsTex").style.display = 'block';
-				document.getElementById("colorTex").style.display = 'block';
-
-			} else {
-				Editor.fastEditMode = true;
-				Editor.graph.start();
-				self.fastEditButton.textContent  = "Fast Edit Mode: ON";
-
-				// Hide textures
-				document.getElementById("heightmapTex").style.display = 'none';
-				document.getElementById("normalsTex").style.display = 'none';
-				document.getElementById("colorTex").style.display = 'none';
+		// Validate terrain size input
+		this.terrainSizeInput = document.getElementById("terrainSize")
+		this.terrainSizeInput.oninput = function() {
+			if (this.value > 8192) {
+				this.value = 8192;
 			}
+			// if (this.value < 4) {
+			// 	this.value = 4;
+			// }
+		};
+
+		this.demoSelector = document.getElementById("selector")
+		this.demoSelector.onchange = function(e) {
+			var option = this.options[this.selectedIndex];
+			var url = option.dataset["url"];
+
+			if(url) {
+				var req = new XMLHttpRequest();
+				req.open('GET', url, true);
+				req.send(null);
+				req.onload = function (oEvent) {
+					if(req.status !== 200)
+					{
+						console.error("Error loading graph:", req.status,req.response);
+						return;
+					}
+					var data = JSON.parse( req.response );
+
+					// TODO: remove this backwards compatibility check
+					if (data.constructor === Array) {
+						Editor.graph.configure(data[0]);
+						var size = data[1]
+						self.terrainSizeInput.value = data[1];
+						self.terrainSize = data[1];
+					} else {
+						Editor.graph.configure(data);
+					}
+					self.calculateButton.click();
+					Editor.graph.start();
+				}
+			}
+			else {
+				self.graph.clear();
+			}
+		};
+
+		function addDemo( name, url, selected )
+		{
+			var option = document.createElement("option");
+			if (selected) {
+				option.setAttribute('selected', 'selected');
+			}
+			option.value = name;
+			option.dataset["url"] = url;
+			option.innerHTML = name;
+			self.demoSelector.appendChild( option );
+		}
+
+		//some examples
+		addDemo("Simple Terrain", "data/Simple Terrain.json", true);
+		addDemo("Mountains", "data/Mountains.json");
+
+		this.demoSelector.onchange();
+
+		var submitTerrainSize = document.getElementById("submitTerrainSize")
+		submitTerrainSize.onclick = function() {
+
+			var value = Number(self.terrainSizeInput.value);
+			if (value < 128) {
+				self.terrainSizeInput.value = 128;
+				value = 128;
+			}
+
+			Editor.terrainSize = value;
+			self.calculateButton.click();
 		};
 
 		var saveButton = document.getElementById("saveButton")
 		saveButton.onclick = function() {
 			var a = document.createElement('a');
-			var json = JSON.stringify( self.graph.serialize() );
+			var json = JSON.stringify( [self.graph.serialize(), Editor.terrainSize] );
 			a.setAttribute('href', 'data:text/plain;charset=utf-u,' + encodeURIComponent(json));
 			a.setAttribute('download', "Workflow.json");
 			a.click()
 		};
 
 		var loadFile = document.getElementById("loadFile")
+		var count = 0;
 		loadFile.addEventListener('change', function() {
 			var url = window.URL.createObjectURL(loadFile.files[0]);
-			self.graph.load(url);
-			if (Editor.fastEditMode) {
-				self.fastEditButton.click();
+
+			var req = new XMLHttpRequest();
+			req.open('GET', url, true);
+			req.send(null);
+			req.onload = function (oEvent) {
+				if(req.status !== 200)
+				{
+					console.error("Error loading graph:", req.status,req.response);
+					return;
+				}
+				var data = JSON.parse( req.response );
+
+				// TODO: remove this backwards compatibility check
+				if (data.constructor === Array) {
+					Editor.graph.configure(data[0]);
+					var size = data[1]
+					self.terrainSizeInput.value = data[1];
+					self.terrainSize = data[1];
+				} else {
+					Editor.graph.configure(data);
+				}
+				self.calculateButton.click();
+				Editor.graph.start();
 			}
+
+			loadFile.value = "";
 		});
 
 		// Get file data on drop
@@ -129,6 +208,9 @@ var Editor = {
 		var yaw = Math.acos(dir.x/Math.cos(pitch));
 
 		this.camera.setYawPitch(-Math.toDegrees(yaw), Math.toDegrees(pitch));
+	},
+	setCalculateColor: function(color) {
+		this.calculateButton.style.backgroundColor = color;
 	}
 };
 

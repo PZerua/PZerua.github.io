@@ -9,9 +9,7 @@ OutputNode.title = "Output";
 OutputNode.position = [10, 50];
 OutputNode.size = [300, 50];
 
-//function to call when the node is executed
-OutputNode.prototype.onExecute = function() {
-
+OutputNode.prototype.evaluateHash = function() {
     var inputsValues = [];
     for (var i = 0; i < this.inputs.length; i++) {
         var input = this.getInputData(i);
@@ -29,10 +27,20 @@ OutputNode.prototype.onExecute = function() {
     var hash = Math.createHash(inputsValues);
 
     if (this.hash && this.hash == hash) {
-        this.setOutputData(0, this.heighmapOBJ);
-        return;
+        return false;
     } else {
         this.hash = hash;
+        return true;
+    }
+}
+
+//function to call when the node is executed
+OutputNode.prototype.onExecute = function() {
+
+    var hashChanged = this.evaluateHash()
+
+    if (!Editor.calculatingImages && (!hashChanged || Editor.fastEditMode)) {
+        return;
     }
 
     // Receive heightmap Obj and copy its contents (I don't want to modify it being a reference, bad things can happen)
@@ -65,7 +73,7 @@ OutputNode.prototype.onExecute = function() {
     if (!this.normalsTexture) {
         // --- Create normal map and save it in the provided texture ---
         // Create texture to be filled by the framebuffer
-        this.normalsTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null, this.hash);
+        this.normalsTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA32F, gl.RGBA, gl.FLOAT, null, this.hash);
         // Create framebuffer providing the texture and a custom shader
         this.fboNormals = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.normalsTexture, "calcNormals", setNormalsUniformsCallback);
     } else {
@@ -78,7 +86,7 @@ OutputNode.prototype.onExecute = function() {
     if (!this.colorTexture) {
 
         // Create texture to be filled by the framebuffer
-        this.colorTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null, this.hash);
+        this.colorTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA32F, gl.RGBA, gl.FLOAT, null, this.hash);
         this.fboColor = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.colorTexture);
 
     } else {
@@ -86,7 +94,6 @@ OutputNode.prototype.onExecute = function() {
     }
 
     if (!this.heighmapOBJ.colorTexture) {
-
         // Create framebuffer providing the texture and a custom shader
         this.fboColor.setShader("calcColor");
         this.fboColor.setUniformsCallback(setColorUniformsCallback);
@@ -100,10 +107,14 @@ OutputNode.prototype.onExecute = function() {
     }
 
 
-    // Create framebuffer providing the texture and a custom shader
-    this.fboHeightmap = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.heighmapOBJ.heightmapTexture);
+    if (!this.fboHeightmap) {
+        // Create framebuffer providing the texture and a custom shader
+        this.fboHeightmap = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.heighmapOBJ.heightmapTexture);
+    } else {
+        this.fboHeightmap.setTexture(this.heighmapOBJ.heightmapTexture);
+    }
 
-    if (!Editor.fastEditMode) {
+    if (Editor.calculatingImages) {
         // Display heightmap texture in editor
         var img = this.fboHeightmap.toImage();
         var htmlImg = document.getElementById("heightmapTex");
@@ -118,6 +129,9 @@ OutputNode.prototype.onExecute = function() {
         img = this.fboColor.toImage();
         htmlImg = document.getElementById("colorTex");
         htmlImg.src = img.src;
+
+        Editor.calculatingImages = false;
+        Editor.setCalculateColor("#3F3F3F");
     }
 }
 

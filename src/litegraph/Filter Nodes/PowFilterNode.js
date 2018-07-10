@@ -6,15 +6,15 @@ function PowFilterNode() {
 
     this.addOutput("Heightmap");
 
+    this.properties = {exponent:1.0};
+
     this.size[1] += 128.0;
 }
 
 //name to show
 PowFilterNode.title = "Pow Filter";
 
-//function to call when the node is executed
-PowFilterNode.prototype.onExecute = function() {
-
+PowFilterNode.prototype.evaluateHash = function() {
     var inputsValues = [];
     for (var i = 0; i < this.inputs.length; i++) {
         var input = this.getInputData(i);
@@ -29,41 +29,79 @@ PowFilterNode.prototype.onExecute = function() {
         }
     }
 
+    // Detect terrain size changes
+    inputsValues.push(Editor.terrainSize);
+
     var hash = Math.createHash(inputsValues);
 
     if (this.hash && this.hash == hash) {
         this.setOutputData(0, this.heighmapOBJ);
-        return;
+        return false;
     } else {
         this.hash = hash;
+        return true;
     }
+}
 
+PowFilterNode.prototype.onConnectionsChange = function() {
+    if (this.heightmapOBJ) {
+        this.setOutputData(0, this.heightmapOBJ);
+    }
+}
+
+PowFilterNode.prototype.checkProperties = function() {
     // Receive heightmap Obj and copy its contents (I don't want to modify it being a reference, bad things can happen)
     var heightmapOBJ = this.getInputData(0);
     if (heightmapOBJ === undefined) {
-        return
+        return false;
     } else {
-        this.heighmapOBJ = Object.assign({}, heightmapOBJ);
+        this.heightmapOBJ = Object.assign({}, heightmapOBJ);
     }
 
-    var exponent = this.getInputData(1);
-    if (exponent === undefined)
-        exponent = 1.0;
+    // Receive size
+    this.heightmapOBJ.size = Editor.terrainSize;
+
+    var idx = 1;
+
+    this.properties.exponent = this.getInputData(idx) !== undefined ? this.getInputData(idx) : this.properties.exponent;
+    idx++;
+
+    return true;
+}
+
+//function to call when the node is executed
+PowFilterNode.prototype.onExecute = function() {
+
+    if(!this.checkProperties()) {
+        this.setOutputData(0, this.lastOBJ);
+        return;
+    }
+    var hashChanged = this.evaluateHash()
+
+    if (hashChanged) {
+        Editor.setCalculateColor("#a0711a");
+    }
+
+    if (!Editor.calculatingImages && !hashChanged) {
+        //this.setOutputData(0, this.heightmapOBJ);
+        this.setOutputData(0, this.lastOBJ);
+        return;
+    }
 
     var self = this;
     var setFilterUniformsCallback = function() {
         self.fboFilter.shader.setInt("u_heightmapTexture", 0);
         gl.activeTexture(gl.TEXTURE0);
-        self.heighmapOBJ.heightmapTexture.bind();
+        self.heightmapOBJ.heightmapTexture.bind();
 
-        self.fboFilter.shader.setFloat("u_exponent", exponent);
+        self.fboFilter.shader.setFloat("u_exponent", self.properties.exponent);
     }
 
     if (!this.filterTexture) {
         // Create texture to be filled by the framebuffer
-        this.filterTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null, this.hash);
+        this.filterTexture = new Texture(this.heightmapOBJ.size, this.heightmapOBJ.size, gl.RGBA32F, gl.RGBA, gl.FLOAT, null, this.hash);
         // Create framebuffer providing the texture and a custom shader
-        this.fboFilter = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.filterTexture, "powFilter", setFilterUniformsCallback);
+        this.fboFilter = new FrameBuffer(this.heightmapOBJ.size, this.heightmapOBJ.size, this.filterTexture, "powFilter", setFilterUniformsCallback);
     } else {
         this.filterTexture.setHash(this.hash);
     }
@@ -72,15 +110,16 @@ PowFilterNode.prototype.onExecute = function() {
     this.fboFilter.render();
 
     //this.heighmapOBJ.heightmapTexture.delete();
-    this.heighmapOBJ.heightmapTexture = this.filterTexture;
+    this.heightmapOBJ.heightmapTexture = this.filterTexture;
 
     // Only generate preview when fast edit is disabled
-    if (!Editor.fastEditMode) {
+    if (Editor.calculatingImages) {
         // To display heightmap texture in node
         this.img = this.fboFilter.toImage();
     }
 
-    this.setOutputData(0, this.heighmapOBJ);
+    this.lastOBJ = Object.assign({}, this.heightmapOBJ);
+    this.setOutputData(0, this.heightmapOBJ);
 }
 
 PowFilterNode.prototype.onDrawBackground = function(ctx)

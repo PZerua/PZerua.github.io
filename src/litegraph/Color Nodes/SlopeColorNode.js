@@ -9,15 +9,15 @@ function SlopeColorNode() {
     this.addInput("Dispersion","number");
     this.addOutput("Heightmap");
 
+    this.properties = {color0:[1.0,1.0,1.0],color1:[1.0,1.0,1.0],color2:[1.0,1.0,1.0],color3:[1.0,1.0,1.0],dispersion:2.0};
+
     this.size[1] += 128.0;
 }
 
 //name to show
 SlopeColorNode.title = "Slope Color";
 
-//function to call when the node is executed
-SlopeColorNode.prototype.onExecute = function() {
-
+SlopeColorNode.prototype.evaluateHash = function() {
     var inputsValues = [];
     for (var i = 0; i < this.inputs.length; i++) {
         var input = this.getInputData(i);
@@ -40,75 +40,108 @@ SlopeColorNode.prototype.onExecute = function() {
     var hash = Math.createHash(inputsValues);
 
     if (this.hash && this.hash == hash) {
-        this.setOutputData(0, this.heighmapOBJ);
-        return;
+        return false;
     } else {
         this.hash = hash;
+        return true;
     }
+}
 
+SlopeColorNode.prototype.onConnectionsChange = function() {
+    if (this.lastOBJ) {
+        this.setOutputData(0, this.lastOBJ);
+    }
+}
+
+SlopeColorNode.prototype.checkProperties = function() {
     // Receive heightmap Obj and copy its contents (I don't want to modify it being a reference, bad things can happen)
     var heightmapOBJ = this.getInputData(0);
     if (heightmapOBJ === undefined) {
-        return
+        return false;
     } else {
-        this.heighmapOBJ = Object.assign({}, heightmapOBJ);
+        this.heightmapOBJ = Object.assign({}, heightmapOBJ);
     }
 
-    var color0 = this.getInputData(1);
-    if (color0 === undefined)
-        color0 = [1.0, 1.0, 1.0];
+    // Receive size
+    this.heightmapOBJ.size = Editor.terrainSize;
 
-    var color1 = this.getInputData(2);
-    if (color1 === undefined)
-        color1 = [1.0, 1.0, 1.0];
+    var idx = 1;
 
-    var color2 = this.getInputData(3);
-    if (color2 === undefined)
-        color2 = [1.0, 1.0, 1.0];
+    this.properties.color0 = this.getInputData(idx) !== undefined ? this.getInputData(idx) : this.properties.color0;
+    idx++;
+    this.properties.color1 = this.getInputData(idx) !== undefined ? this.getInputData(idx) : this.properties.color1;
+    idx++;
+    this.properties.color2 = this.getInputData(idx) !== undefined ? this.getInputData(idx) : this.properties.color2;
+    idx++;
+    this.properties.color3 = this.getInputData(idx) !== undefined ? this.getInputData(idx) : this.properties.color3;
+    idx++;
+    this.properties.dispersion = this.getInputData(idx) !== undefined ? this.getInputData(idx) : this.properties.dispersion;
+    idx++;
 
-    var color3 = this.getInputData(4);
-    if (color3 === undefined)
-        color3 = [1.0, 1.0, 1.0];
+    return true;
+}
 
-    var dispersion = this.getInputData(5);
-    if (dispersion === undefined)
-        dispersion = 2.0;
+//function to call when the node is executed
+SlopeColorNode.prototype.onExecute = function() {
 
-    dispersion /= 100.0;
+    if(!this.checkProperties()) {
+        this.setOutputData(0, this.lastOBJ);
+        return;
+    }
+    var hashChanged = this.evaluateHash()
 
-    if (dispersion > 0.15)
-        dispersion = 0.15;
+    if (hashChanged) {
+        Editor.setCalculateColor("#a0711a");
+    }
+
+    if (!Editor.calculatingImages && !hashChanged) {
+        //this.setOutputData(0, this.heightmapOBJ);
+        this.setOutputData(0, this.lastOBJ);
+        return;
+    }
+
+    this.properties.dispersion /= 100.0;
+
+    if (this.properties.dispersion > 0.15)
+        this.properties.dispersion = 0.15;
 
     var self = this;
     var setFilterUniformsCallback = function() {
         self.fboColor.shader.setInt("u_heightmapTexture", 0);
         gl.activeTexture(gl.TEXTURE0);
-        self.heighmapOBJ.heightmapTexture.bind();
+        self.heightmapOBJ.heightmapTexture.bind();
 
-        self.fboColor.shader.setFloat("u_size", self.heighmapOBJ.size);
-        self.fboColor.shader.setFloat("u_heightScale", self.heighmapOBJ.heightScale);
-        self.fboColor.shader.setFloat3("u_color0", color0);
-        self.fboColor.shader.setFloat3("u_color1", color1);
-        self.fboColor.shader.setFloat3("u_color2", color2);
-        self.fboColor.shader.setFloat3("u_color3", color3);
-        self.fboColor.shader.setFloat("u_dispersion", dispersion);
+        self.fboColor.shader.setFloat("u_size", self.heightmapOBJ.size);
+        self.fboColor.shader.setFloat("u_heightScale", self.heightmapOBJ.heightScale);
+        self.fboColor.shader.setFloat3("u_color0", self.properties.color0);
+        self.fboColor.shader.setFloat3("u_color1", self.properties.color1);
+        self.fboColor.shader.setFloat3("u_color2", self.properties.color2);
+        self.fboColor.shader.setFloat3("u_color3", self.properties.color3);
+        self.fboColor.shader.setFloat("u_dispersion", self.properties.dispersion);
     }
 
-    // --- Create normal map and save it in the provided texture ---
-    // Create texture to be filled by the framebuffer
-    this.heighmapOBJ.colorTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null, this.hash);
-    // Create framebuffer providing the texture and a custom shader
-    this.fboColor = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.heighmapOBJ.colorTexture, "slopeColor", setFilterUniformsCallback);
+    if (!this.colorTexture) {
+        // Create texture to be filled by the framebuffer
+        this.colorTexture = new Texture(this.heightmapOBJ.size, this.heightmapOBJ.size, gl.RGBA32F, gl.RGBA, gl.FLOAT, null, this.hash);
+        // Create framebuffer providing the texture and a custom shader
+        this.fboColor = new FrameBuffer(this.heightmapOBJ.size, this.heightmapOBJ.size, this.colorTexture, "slopeColor", setFilterUniformsCallback);
+    } else {
+        this.colorTexture.setHash(this.hash);
+    }
 
+    this.fboColor.setUniformsCallback(setFilterUniformsCallback)
     this.fboColor.render();
 
+    this.heightmapOBJ.colorTexture = this.colorTexture;
+
     // Only generate preview when fast edit is disabled
-    if (!Editor.fastEditMode) {
+    if (Editor.calculatingImages) {
         // To display heightmap texture in node
         this.img = this.fboColor.toImage();
     }
 
-    this.setOutputData(0, this.heighmapOBJ);
+    this.lastOBJ = Object.assign({}, this.heightmapOBJ);
+    this.setOutputData(0, this.heightmapOBJ);
 }
 
 SlopeColorNode.prototype.onDrawBackground = function(ctx)

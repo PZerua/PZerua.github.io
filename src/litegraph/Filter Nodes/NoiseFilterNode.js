@@ -6,15 +6,15 @@ function NoiseFilterNode() {
     this.addInput("Amplitude");
     this.addOutput("Heightmap");
 
+    this.properties = {freq:0.3,amp:1.0};
+
     this.size[1] += 128.0;
 }
 
 //name to show
 NoiseFilterNode.title = "Noise Filter";
 
-//function to call when the node is executed
-NoiseFilterNode.prototype.onExecute = function() {
-
+NoiseFilterNode.prototype.evaluateHash = function() {
     var inputsValues = [];
     for (var i = 0; i < this.inputs.length; i++) {
         var input = this.getInputData(i);
@@ -29,59 +29,100 @@ NoiseFilterNode.prototype.onExecute = function() {
         }
     }
 
+    // Detect terrain size changes
+    inputsValues.push(Editor.terrainSize);
+
     var hash = Math.createHash(inputsValues);
 
     if (this.hash && this.hash == hash) {
-        this.setOutputData(0, this.heighmapOBJ);
-        return;
+        return false;
     } else {
         this.hash = hash;
+        return true;
     }
+}
 
+NoiseFilterNode.prototype.onConnectionsChange = function() {
+    if (this.heightmapOBJ) {
+        this.setOutputData(0, this.heightmapOBJ);
+    }
+}
+
+NoiseFilterNode.prototype.checkProperties = function() {
     // Receive heightmap Obj and copy its contents (I don't want to modify it being a reference, bad things can happen)
     var heightmapOBJ = this.getInputData(0);
     if (heightmapOBJ === undefined) {
-        return
+        return false;
     } else {
-        this.heighmapOBJ = Object.assign({}, heightmapOBJ);
+        this.heightmapOBJ = Object.assign({}, heightmapOBJ);
     }
 
-    var frequency = this.getInputData(1);
-    if (frequency === undefined)
-        frequency = 0.3;
+    // Receive size
+    this.heightmapOBJ.size = Editor.terrainSize;
 
-    amplitude = this.getInputData(2);
-    if (amplitude === undefined)
-        amplitude = 1.0;
+    var idx = 1;
+
+    this.properties.freq = this.getInputData(idx) !== undefined ? this.getInputData(idx) : this.properties.freq;
+    idx++;
+
+    this.properties.amp = this.getInputData(idx) !== undefined ? this.getInputData(idx) : this.properties.amp;
+    idx++;
+
+    return true;
+}
+
+//function to call when the node is executed
+NoiseFilterNode.prototype.onExecute = function() {
+
+    if(!this.checkProperties()) {
+        this.setOutputData(0, this.lastOBJ);
+        return;
+    }
+    var hashChanged = this.evaluateHash()
+
+    if (hashChanged) {
+        Editor.setCalculateColor("#a0711a");
+    }
+
+    if (!Editor.calculatingImages && !hashChanged) {
+        this.setOutputData(0, this.lastOBJ);
+        return;
+    }
 
     var self = this;
     var setFilterUniformsCallback = function() {
         self.fboFilter.shader.setInt("u_heightmapTexture", 0);
         gl.activeTexture(gl.TEXTURE0);
-        self.heighmapOBJ.heightmapTexture.bind();
+        self.heightmapOBJ.heightmapTexture.bind();
 
-        self.fboFilter.shader.setFloat("u_frequency", frequency);
-        self.fboFilter.shader.setFloat("u_amplitude", amplitude);
+        self.fboFilter.shader.setFloat("u_frequency", self.properties.freq);
+        self.fboFilter.shader.setFloat("u_amplitude", self.properties.amp);
     }
 
-    // Create texture to be filled by the framebuffer
-    var filterTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null, this.hash);
-    // Create framebuffer providing the texture and a custom shader
-    this.fboFilter = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, filterTexture, "noiseFilter", setFilterUniformsCallback);
+    if (!this.filterTexture) {
+        // Create texture to be filled by the framebuffer
+        this.filterTexture = new Texture(this.heightmapOBJ.size, this.heightmapOBJ.size, gl.RGBA32F, gl.RGBA, gl.FLOAT, null, this.hash);
+        // Create framebuffer providing the texture and a custom shader
+        this.fboFilter = new FrameBuffer(this.heightmapOBJ.size, this.heightmapOBJ.size, this.filterTexture, "noiseFilter", setFilterUniformsCallback);
+    } else {
+        this.filterTexture.setHash(this.hash);
+    }
 
+    this.fboFilter.setUniformsCallback(setFilterUniformsCallback)
     this.fboFilter.render();
 
-    this.heighmapOBJ.heightmapTexture = filterTexture;
+    //this.heighmapOBJ.heightmapTexture.delete();
+    this.heightmapOBJ.heightmapTexture = this.filterTexture;
 
     // Only generate preview when fast edit is disabled
-    if (!Editor.fastEditMode) {
+    if (Editor.calculatingImages) {
         // To display heightmap texture in node
         this.img = this.fboFilter.toImage();
     }
 
-    this.setOutputData(0, this.heighmapOBJ);
+    this.lastOBJ = Object.assign({}, this.heightmapOBJ);
+    this.setOutputData(0, this.heightmapOBJ);
 }
-
 
 NoiseFilterNode.prototype.onDrawBackground = function(ctx)
 {

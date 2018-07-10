@@ -1,7 +1,6 @@
 //node constructor class
 function ValueNoiseNode() {
 
-    this.addInput("Size", "number");
     this.addInput("Amplitude", "number");
     this.addInput("Frequency", "number");
     this.addInput("Octaves", "number");
@@ -12,7 +11,7 @@ function ValueNoiseNode() {
 
     this.addOutput("Heightmap");
 
-    this.heighmapOBJ = {
+    this.heightmapOBJ = {
         heightmapTexture: undefined,
         normalsTexture: undefined,
         colorTexture: undefined,
@@ -20,18 +19,19 @@ function ValueNoiseNode() {
         heightScale: 0
     }
 
+    this.properties = {amp:1.0,freq:3.0,oct:8,hscale:200,perturb:0.0,xoffset:0.0,yoffset:0.0};
+
     this.size[1] += 128.0;
 }
 
 //name to show
 ValueNoiseNode.title = "Value Noise";
 
-//function to call when the node is executed
-ValueNoiseNode.prototype.onExecute = function() {
-
+ValueNoiseNode.prototype.evaluateHash = function() {
     var inputsValues = [];
+    var propArray = Object.values(this.properties);
     for (var i = 0; i < this.inputs.length; i++) {
-        var input = this.getInputData(i);
+        var input = propArray[i];
 
         if (input === undefined) {
             inputsValues[i] = 0;
@@ -43,84 +43,101 @@ ValueNoiseNode.prototype.onExecute = function() {
         }
     }
 
-    // Force to reevaluate when changing between modes
-    inputsValues.push(Editor.fastEditMode ? 1 : 0);
+    // Detect terrain size changes
+    inputsValues.push(Editor.terrainSize);
 
     var hash = Math.createHash(inputsValues);
 
     if (this.hash && this.hash == hash) {
-        this.setOutputData(0, this.heighmapOBJ);
-        return;
+        this.setOutputData(0, this.heightmapOBJ);
+        return false;
     } else {
         this.hash = hash;
+        return true;
     }
+}
 
+ValueNoiseNode.prototype.checkProperties = function() {
     // Receive size
-    this.heighmapOBJ.size = this.getInputData(0);
-    if (this.heighmapOBJ.size === undefined)
-        this.heighmapOBJ.size = 1024;
+    this.heightmapOBJ.size = Editor.terrainSize;
+
+    var idx = 0;
 
     // Receive amplitude
-    var amplitude = this.getInputData(1);
-    if (amplitude === undefined)
-        amplitude = 1;
-
+    this.properties.amp = this.getInputData(idx) !== undefined ? this.getInputData(idx) : this.properties.amp;
+    idx++;
     // Receive frequency
-    frequency = this.getInputData(2);
-    if (frequency === undefined)
-        frequency = 3;
+    this.properties.freq = this.getInputData(idx) !== undefined ? this.getInputData(idx) : this.properties.freq;
+    idx++;
 
     // Receive octaves
-    octaves = this.getInputData(3);
-    if (octaves === undefined)
-        octaves = 8;
+    this.properties.oct = this.getInputData(idx) !== undefined ? this.getInputData(idx) : this.properties.oct;
+    idx++;
 
     // Receive mesh height scale
-    this.heighmapOBJ.heightScale = this.getInputData(4);
-    if (this.heighmapOBJ.heightScale === undefined)
-        this.heighmapOBJ.heightScale = 200;
+    this.properties.hscale = this.getInputData(idx) !== undefined ? this.getInputData(idx) : this.properties.hscale;
+    this.heightmapOBJ.heightScale = this.properties.hscale
+    idx++;
 
     // Receive perturbation
-    perturbation = this.getInputData(5);
-    if (perturbation === undefined)
-        perturbation = 0.0;
+    this.properties.perturb = this.getInputData(idx) !== undefined ? this.getInputData(idx) : this.properties.perturb;
+    idx++;
 
     // Receive x offset
-    xOffset = this.getInputData(6);
-    if (xOffset === undefined)
-        xOffset = 0.0;
+    this.properties.xoffset = this.getInputData(idx) !== undefined ? this.getInputData(idx) : this.properties.xoffset;
+    idx++;
 
     // Receive y offset
-    yOffset = this.getInputData(7);
-    if (yOffset === undefined)
-        yOffset = 0.0;
+    this.properties.yoffset = this.getInputData(idx) !== undefined ? this.getInputData(idx) : this.properties.yoffset;
+    idx++;
+}
+
+//function to call when the node is executed
+ValueNoiseNode.prototype.onExecute = function() {
+
+    this.checkProperties();
+    var hashChanged = this.evaluateHash()
+
+    if (hashChanged) {
+        Editor.setCalculateColor("#a0711a");
+    }
+
+    if (!Editor.calculatingImages && !hashChanged) {
+        this.setOutputData(0, this.lastOBJ);
+        return;
+    }
 
     // Define custom uniforms for the framebuffer's shader
     var self = this;
     var setHeightmapUniformsCallback = function() {
-        self.fboHeightmap.shader.setFloat("u_frequency", frequency);
-        self.fboHeightmap.shader.setFloat("u_amplitude", amplitude);
-        self.fboHeightmap.shader.setInt("u_octaves", octaves);
-        self.fboHeightmap.shader.setFloat("u_perturbation", perturbation);
-        self.fboHeightmap.shader.setFloat("u_xOffset", xOffset);
-        self.fboHeightmap.shader.setFloat("u_yOffset", yOffset);
+        self.fboHeightmap.shader.setFloat("u_frequency", self.properties.freq);
+        self.fboHeightmap.shader.setFloat("u_amplitude", self.properties.amp);
+        self.fboHeightmap.shader.setInt("u_octaves", self.properties.oct);
+        self.fboHeightmap.shader.setFloat("u_perturbation", self.properties.perturb);
+        self.fboHeightmap.shader.setFloat("u_xOffset", self.properties.xoffset);
+        self.fboHeightmap.shader.setFloat("u_yOffset", self.properties.yoffset);
     }
 
-    // --- Create heightmap and save it in the provided texture ---
-    // Create texture to be filled by the framebuffer
-    this.heighmapOBJ.heightmapTexture = new Texture(this.heighmapOBJ.size, this.heighmapOBJ.size, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null, this.hash);
-    // Create framebuffer providing the texture and a custom shader
-    this.fboHeightmap = new FrameBuffer(this.heighmapOBJ.size, this.heighmapOBJ.size, this.heighmapOBJ.heightmapTexture, "valueNoise", setHeightmapUniformsCallback);
+    if (!this.heightmapOBJ.heightmapTexture) {
+        // --- Create heightmap and save it in the provided texture ---
+        // Create texture to be filled by the framebuffer
+        this.heightmapOBJ.heightmapTexture = new Texture(this.heightmapOBJ.size, this.heightmapOBJ.size, gl.RGBA32F, gl.RGBA, gl.FLOAT, null, this.hash);
+        // Create framebuffer providing the texture and a custom shader
+        this.fboHeightmap = new FrameBuffer(this.heightmapOBJ.size, this.heightmapOBJ.size, this.heightmapOBJ.heightmapTexture, "valueNoise", setHeightmapUniformsCallback);
+    } else {
+        this.heightmapOBJ.heightmapTexture.setHash(this.hash);
+        this.fboHeightmap.setUniformsCallback(setHeightmapUniformsCallback);
+    }
 
     this.fboHeightmap.render();
 
-    // Only generate preview when fast edit is disabled
-    if (!Editor.fastEditMode) {
+    if (Editor.calculatingImages) {
         // To display heightmap texture in node
         this.img = this.fboHeightmap.toImage();
     }
 
-    this.setOutputData(0, this.heighmapOBJ);
+    this.lastOBJ = Object.assign({}, this.heightmapOBJ);
+    this.setOutputData(0, this.heightmapOBJ);
 }
 
 ValueNoiseNode.prototype.onDrawBackground = function(ctx)

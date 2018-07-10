@@ -32,7 +32,7 @@ void main (void)
     vec4 normalsTex = texture(u_normalsTexture, oUvs);
 
     vec3 N = normalsTex.rgb;
-    vec3 L = normalize(vec3(0.5, 0.2, 0.5));
+    vec3 L = normalize(vec3(0.5, 1.2, 0.5));
 
     diffuse = clamp( colorTex.rgb * max(dot(N,L), 0.0), 0.0, 1.0 );
 

@@ -9,6 +9,7 @@ function Terrain(scale) {
     this.vboBarycentric;
     this.ebo;
     this.showWireframe = 0;
+    this.firstSetup = true;
 
     var self = this;
 
@@ -105,7 +106,7 @@ function Terrain(scale) {
         if (outputNode) {
             var heightmapOBJ = outputNode.heighmapOBJ;
         } else {
-            console.error("No Output node in graph");
+            //console.error("No Output node in graph");
             return false;
         }
 
@@ -125,6 +126,11 @@ function Terrain(scale) {
 
         self.size = heightmapOBJ.size;
         self.buildTerrain();
+
+        if (this.firstSetup) {
+            Editor.centerCamera();
+            this.firstSetup = false;
+        }
 
         // -- Setup buffers --
         self.vao = new VertexArray();
