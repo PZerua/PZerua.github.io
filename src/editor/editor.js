@@ -200,6 +200,10 @@ var Editor = {
 		mainLoop();
 	},
 	centerCamera: function() {
+		if (!this.renderer.terrain) {
+			return false;
+		}
+
 		this.camera.eye = new vec3(0, this.renderer.terrain.radious * 1.5, this.renderer.terrain.radious * 2.5);
 
 		var dir = vec3.vec3Sub(new vec3(0,0,0), this.camera.eye).normalize();
@@ -208,6 +212,8 @@ var Editor = {
 		var yaw = Math.acos(dir.x/Math.cos(pitch));
 
 		this.camera.setYawPitch(-Math.toDegrees(yaw), Math.toDegrees(pitch));
+
+		return true;
 	},
 	setCalculateColor: function(color) {
 		this.calculateButton.style.backgroundColor = color;

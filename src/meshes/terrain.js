@@ -128,8 +128,9 @@ function Terrain(scale) {
         self.buildTerrain();
 
         if (this.firstSetup) {
-            Editor.centerCamera();
-            this.firstSetup = false;
+            if (Editor.centerCamera()) {
+                this.firstSetup = false;
+            }
         }
 
         // -- Setup buffers --
