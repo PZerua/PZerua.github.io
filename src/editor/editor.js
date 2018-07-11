@@ -118,6 +118,7 @@ var Editor = {
 		//some examples
 		addDemo("Simple Terrain", "data/Simple Terrain.json", true);
 		addDemo("Mountains", "data/Mountains.json");
+		addDemo("Mars", "data/Mars.json");
 
 		this.demoSelector.onchange();
 

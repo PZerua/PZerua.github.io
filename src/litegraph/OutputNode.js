@@ -95,6 +95,7 @@ OutputNode.prototype.onExecute = function() {
 
     if (!this.heighmapOBJ.colorTexture) {
         // Create framebuffer providing the texture and a custom shader
+        this.fboColor.setTexture(this.colorTexture);
         this.fboColor.setShader("calcColor");
         this.fboColor.setUniformsCallback(setColorUniformsCallback);
 
@@ -105,7 +106,6 @@ OutputNode.prototype.onExecute = function() {
     } else {
         this.fboColor.setTexture(this.heighmapOBJ.colorTexture);
     }
-
 
     if (!this.fboHeightmap) {
         // Create framebuffer providing the texture and a custom shader
