@@ -79,15 +79,15 @@ class FrameBuffer {
 
     toImage() {
 
-        this.bind();
-
         var tmpTexture = new Texture(this.width, this.height, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, null);
-        tmpTexture.bind();
+        var tmpFBO = new FrameBuffer(this.width, this.height, tmpTexture);
 
-        gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, this.width, this.height, 0);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, tmpTexture.textureId, 0);
+        gl.bindFramebuffer (gl.DRAW_FRAMEBUFFER, tmpFBO.fbId );
+        gl.bindFramebuffer (gl.READ_FRAMEBUFFER, this.fbId );
+        gl.readBuffer ( gl.COLOR_ATTACHMENT0 );
+        gl.blitFramebuffer(0, 0, this.width, this.height, 0, 0, this.width, this.height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
 
-        gl.readBuffer(gl.COLOR_ATTACHMENT1);
+        tmpFBO.bind();
 
         // Read the contents of the framebuffer
         var pixels = new Uint8Array(this.width * this.height * 4);
@@ -96,9 +96,7 @@ class FrameBuffer {
         tmpTexture.unbind();
         tmpTexture.delete();
 
-        gl.readBuffer(gl.COLOR_ATTACHMENT0);
-
-        this.unbind();
+        tmpFBO.unbind();
 
         // Create a 2D canvas to store the result
         var canvas = document.createElement('canvas');
